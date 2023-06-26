@@ -20,8 +20,9 @@ gtree_21 <- gtree_2021 %>%
 
 # write.csv(gtree_21, "~/Desktop/gtree_21.csv")
 
-##**************************
-# Post cage-installation data ----
+#_______________________________----
+# GTREE ----
+## Post cage-installation data ----
 mm <- read.csv(file = "./Earthwatch/MacPass/data/gtree_mm_exclosures.csv", header = TRUE)
 mm$germ.prop.via.int <- as.integer(rescale(mm$germ.prop.via, to = c(0,20)))
 mm$germ.prop.via.int[is.na(mm$germ.prop.via.int)] <- 0
@@ -73,8 +74,8 @@ x3b <- factor(mm.scut.fir.no[,"treat"], levels = c("2","4"))
 x4a <- factor(mm.sshr.fir.ex[,"treat"], levels = c("2","4"))
 x4b <- factor(mm.sshr.fir.no[,"treat"], levels = c("2","4"))
 
-##**************************
-# Proportion fir germination cage/uncaged ----
+#______-----
+## Proportion fir germination cage/uncaged ----
 jpeg("./Earthwatch/MacPass/figures/fir.germination.jpg", width = 5, height = 7, units = "in", res = 300)
 par(mfrow = c(4, 1))
 par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
@@ -135,8 +136,8 @@ axis(1, at = c(1.5,3.5), labels = c("Vegetated","Scarified"), tick = TRUE)
 mtext(side = 2, "Germination proportion of viable", outer = TRUE)
 dev.off()
 
-##**************************
-# Proportion spruce germination cage/uncaged ----
+#______-----
+## Proportion spruce germination cage/uncaged ----
 jpeg("./Earthwatch/MacPass/figures/spruce.germination.jpg", width = 5, height = 7, units = "in", res = 300)
 par(mfrow = c(4, 1))
 par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
@@ -197,9 +198,9 @@ axis(1, at = c(1.5,3.5), labels = c("Vegetated","Scarified"), tick = TRUE)
 mtext(side = 2, "Germination proportion of viable", outer = TRUE)
 dev.off()
 
-##**************************
-# Proportion fir survival cage/uncaged ----
-## NALP - fir ----
+#______-----
+## Proportion fir survival cage/uncaged ----
+## NALP - fir
 mm.nalp.fir.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.nalp.fir.no$surv.prop.0[mm.nalp.fir.no$treatment == "seeded"]),
                                                         length(mm.nalp.fir.no$surv.prop.1[mm.nalp.fir.no$treatment == "seeded"]),
                                                         length(mm.nalp.fir.no$surv.prop.2[mm.nalp.fir.no$treatment == "seeded"]),
@@ -266,7 +267,7 @@ mm.nalp.fir.ex.seedscar.ci$fit <- exp(mm.nalp.fir.ex.seedscar.ci$fit)-1
 mm.nalp.fir.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                        surv.mean = mm.nalp.fir.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-## SALP - fir ----
+## SALP - fir
 mm.salp.fir.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.salp.fir.no$surv.prop.0[mm.salp.fir.no$treatment == "seeded"]),
                                                         length(mm.salp.fir.no$surv.prop.1[mm.salp.fir.no$treatment == "seeded"]),
                                                         length(mm.salp.fir.no$surv.prop.2[mm.salp.fir.no$treatment == "seeded"]),
@@ -334,9 +335,9 @@ mm.salp.fir.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.salp.fir.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
 
-
-# Proportion spruce survival cage/uncaged ----
-## NALP - spruce ----
+#______-----
+## Proportion spruce survival cage/uncaged ----
+## NALP - spruce
 mm.nalp.spruce.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.nalp.spruce.no$surv.prop.0[mm.nalp.spruce.no$treatment == "seeded"]),
                                                         length(mm.nalp.spruce.no$surv.prop.1[mm.nalp.spruce.no$treatment == "seeded"]),
                                                         length(mm.nalp.spruce.no$surv.prop.2[mm.nalp.spruce.no$treatment == "seeded"]),
@@ -403,7 +404,7 @@ mm.nalp.spruce.ex.seedscar.ci$fit <- exp(mm.nalp.spruce.ex.seedscar.ci$fit)-1
 mm.nalp.spruce.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.nalp.spruce.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-## SALP - spruce ----
+## SALP - spruce
 mm.salp.spruce.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.salp.spruce.no$surv.prop.0[mm.salp.spruce.no$treatment == "seeded"]),
                                                         length(mm.salp.spruce.no$surv.prop.1[mm.salp.spruce.no$treatment == "seeded"]),
                                                         length(mm.salp.spruce.no$surv.prop.2[mm.salp.spruce.no$treatment == "seeded"]),
@@ -470,9 +471,7 @@ mm.salp.spruce.ex.seedscar.ci$fit <- exp(mm.salp.spruce.ex.seedscar.ci$fit)-1
 mm.salp.spruce.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.salp.spruce.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-
-
-## SCUT - fir ----
+## SCUT - fir
 mm.scut.fir.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.scut.fir.no$surv.prop.0[mm.scut.fir.no$treatment == "seeded"]),
                                                         length(mm.scut.fir.no$surv.prop.1[mm.scut.fir.no$treatment == "seeded"]),
                                                         length(mm.scut.fir.no$surv.prop.2[mm.scut.fir.no$treatment == "seeded"]),
@@ -539,7 +538,7 @@ mm.scut.fir.ex.seedscar.ci$fit <- exp(mm.scut.fir.ex.seedscar.ci$fit)-1
 mm.scut.fir.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.scut.fir.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-## SSHR - fir ----
+## SSHR - fir
 mm.sshr.fir.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.sshr.fir.no$surv.prop.0[mm.sshr.fir.no$treatment == "seeded"]),
                                                         length(mm.sshr.fir.no$surv.prop.1[mm.sshr.fir.no$treatment == "seeded"]),
                                                         length(mm.sshr.fir.no$surv.prop.2[mm.sshr.fir.no$treatment == "seeded"]),
@@ -606,14 +605,7 @@ mm.sshr.fir.ex.seedscar.ci$fit <- exp(mm.sshr.fir.ex.seedscar.ci$fit)-1
 mm.sshr.fir.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.sshr.fir.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-
-
-
-
-
-
-
-## SCUT - spruce ----
+## SCUT - spruce
 mm.scut.spruce.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.scut.spruce.no$surv.prop.0[mm.scut.spruce.no$treatment == "seeded"]),
                                                         length(mm.scut.spruce.no$surv.prop.1[mm.scut.spruce.no$treatment == "seeded"]),
                                                         length(mm.scut.spruce.no$surv.prop.2[mm.scut.spruce.no$treatment == "seeded"]),
@@ -680,7 +672,7 @@ mm.scut.spruce.ex.seedscar.ci$fit <- exp(mm.scut.spruce.ex.seedscar.ci$fit)-1
 mm.scut.spruce.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.scut.spruce.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-## SSHR - spruce ----
+## SSHR - spruce
 mm.sshr.spruce.no.seed <- data.frame(year = (rep(c(1:5), c(length(mm.sshr.spruce.no$surv.prop.0[mm.sshr.spruce.no$treatment == "seeded"]),
                                                         length(mm.sshr.spruce.no$surv.prop.1[mm.sshr.spruce.no$treatment == "seeded"]),
                                                         length(mm.sshr.spruce.no$surv.prop.2[mm.sshr.spruce.no$treatment == "seeded"]),
@@ -747,8 +739,9 @@ mm.sshr.spruce.ex.seedscar.ci$fit <- exp(mm.sshr.spruce.ex.seedscar.ci$fit)-1
 mm.sshr.spruce.ex.seedscar.mean <- data.frame(year.vals = seq(1,5,0.1),
                                            surv.mean = mm.sshr.spruce.ex.seedscar.ci$fit) #only doing wells with 2015-2020 data
 
-# Survival data collation ----
-## Nalp and Salp fir ----
+#______-----
+## Survival data collation ----
+## Nalp and Salp fir
 mm.nalp.fir.no %>%
         group_by(treatment) %>%
         summarise(surv.prop.0 = mean(surv.prop.0, na.rm = T),
@@ -781,7 +774,7 @@ mm.salp.fir.ex %>%
                   surv.prop.3 = mean(surv.prop.3, na.rm = T),
                   surv.prop.4 = mean(surv.prop.4, na.rm = T))
 
-## Fir figure ----
+## Fir figure
 jpeg("./Earthwatch/MacPass/figures/fir.survival.jpg", width = 5, height = 7, units = "in", res = 300)
 par(mfrow = c(4, 1))
 par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
@@ -872,8 +865,7 @@ mtext("Year post germination", side = 1, outer = T, line = 1.5)
 mtext("Survival proportion", side = 2, outer = T)
 dev.off()
 
-
-## Nalp and Salp spruce ----
+## Nalp and Salp spruce
 mm.nalp.spruce.no %>%
   group_by(treatment) %>%
   summarise(surv.prop.0 = mean(surv.prop.0, na.rm = T),
@@ -906,7 +898,7 @@ mm.salp.spruce.ex %>%
             surv.prop.3 = mean(surv.prop.3, na.rm = T),
             surv.prop.4 = mean(surv.prop.4, na.rm = T))
 
-## Spruce figure ----
+## Spruce figure
 jpeg("./Earthwatch/MacPass/figures/spruce.survival.jpg", width = 5, height = 7, units = "in", res = 300)
 par(mfrow = c(4, 1))
 par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
@@ -998,7 +990,7 @@ mtext("Survival proportion", side = 2, outer = T)
 dev.off()
 
 
-## SCUT and SSHR fir ----
+## SCUT and SSHR fir
 mm.scut.fir.no %>%
         group_by(treatment) %>%
         summarise(surv.prop.0 = mean(surv.prop.0, na.rm = T),
@@ -1120,7 +1112,7 @@ mtext("Year post germination", side = 1, outer = T, line = 1.5)
 mtext("Survival proportion", side = 2, outer = T)
 dev.off()
 
-## SCUT and SSHR spruce ----
+## SCUT and SSHR spruce
 mm.scut.spruce.no %>%
   group_by(treatment) %>%
   summarise(surv.prop.0 = mean(surv.prop.0, na.rm = T),
@@ -1375,7 +1367,7 @@ summary(sshr.spruce.Nb1C)
 
 
 
-#***************************************************************
+#_______________________________----
 # Microclimate ----
 mm <- read.csv("./Earthwatch/MacPass/data/microclimate_19900721_20220818_filled.csv", header = T)[-1]
 
@@ -1565,7 +1557,7 @@ legend(1994,8.8, c("HF", "BP", "D6", "D2","GF"),
        horiz = T, lty = 1, cex = 1, bty = "n", y.intersp = 1, text.width = 2)
 dev.off()
 
-##***************************************************************
+#_______________________________----
 # Thaw depths ----
 thaw.mm <- read.csv("./Earthwatch/MacPass/data/thaw.mm.csv", header = TRUE)
 thaw.mm$ci <- thaw.mm$se*qt(0.975, thaw.mm$n-1)
