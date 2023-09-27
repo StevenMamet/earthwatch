@@ -1,3 +1,6 @@
+# devtools::install_github("kaitlynstrickfaden/edger", build_vignettes = TRUE, force = TRUE)
+
+library(edger)
 library(tidyverse)
 library(lubridate)
 library(zoo) # Interpolating snow data
@@ -5,6 +8,13 @@ library(zoo) # Interpolating snow data
 rm(list = ls())
 
 setwd("~/Desktop/Workspace")
+
+im1 <- "/Users/sdmamet/Library/CloudStorage/Dropbox/School/Postdoc/Earthwatch/Mackenzie Mountains/TrailCams/GF/20200921.JPG"
+# im1 <- "../images/image03.jpg"
+par(mar = c(0,0,0,0))
+plot(imager::load.image(im1), axes = F)
+
+edger::edger_single(im1)
 
 # Step 1: Read and prep the cam data ----
 mm_snow <- read.csv("./Earthwatch/MacPass/data/mm_trail_cam.csv")
@@ -146,6 +156,14 @@ mp <- mp %>%
 plot(mp$date, mp$hf.side, type = "l")
 lines(mm_snow$date, mm_snow$hf.side, col = "red")
 mm_snow$hf.side <- mp$hf.side
+
+mm_snow <- mm_snow %>%
+  mutate(
+    gf.top = ifelse(gf.top < 0, 0, gf.top),
+    gf.side = ifelse(gf.side < 0, 0, gf.side),
+    hf.top = ifelse(hf.top < 0, 0, hf.top),
+    hf.side = ifelse(hf.side < 0, 0, hf.side)
+  )
 
 mm_snow %>% 
   ggplot(aes(x = date, y = gf.top)) + geom_line(col = "dodgerblue2") + 
