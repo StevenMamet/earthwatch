@@ -10,6 +10,38 @@ rm(list = ls())
 
 setwd("~/Desktop/Workspace/")
 
+# Constants ----
+year <- 2023
+
+# Functions ----
+poly_na <- function(df, color) {
+  # This function will plot polygons for each segment of a 
+  # dateset containing NAs. The default approach would draw gibberish
+  # polygons.
+  enc <- rle(!is.na(df$mean))
+  endIdxs <- cumsum(enc$lengths)
+  for (i in 1:length(enc$lengths)) {
+    if (enc$values[i]) {
+      endIdx <- endIdxs[i]
+      startIdx <- endIdx - enc$lengths[i] + 1
+      
+      subc5 <- df$c5[startIdx:endIdx]
+      subc95 <- df$c95[startIdx:endIdx]
+      subyear <- df$year[startIdx:endIdx]
+      
+      x <- c(subyear, rev(subyear))
+      y <- c(subc5, rev(subc95))
+      
+      polygon(
+        x = x,
+        y = y,
+        col = scales::alpha(color,0.6),
+        border = NA
+      )
+    }
+  }
+}
+
 #***************************************************************
 # Microclimate ----
 ch <- read.csv("./Earthwatch/Churchill/data/microclimate_20000101_20221010_filled.csv", header = T)[-1]
@@ -201,71 +233,69 @@ legend(2004,4, c("Treed","Fen","Disturbed","Treeless"),
        horiz = T, lty = 1, cex = 1, bty = "n", y.intersp = 1, text.width = 2)
 dev.off()
 
-##***************************************************************
+#_______________________________----
 # Thaw depths ----
-thaw.ch <- read.csv(file = "~/Desktop/Workspace/Earthwatch/Churchill/data/ch_thaw_depths.csv", header = TRUE)
-thaw.ch$ci <- thaw.ch$se*qt(0.975, thaw.ch$n-1)
-thaw.ch$c5 <- thaw.ch$mean - thaw.ch$ci
-thaw.ch$c95 <- thaw.ch$mean + thaw.ch$ci
+thaw_ch <- read.csv(file = "~/Desktop/Workspace/Earthwatch/Churchill/data/ch_thaw_depths.csv", header = TRUE)
+thaw_ch$ci <- thaw_ch$se*qt(0.975, thaw_ch$n-1)
+thaw_ch$c5 <- thaw_ch$mean - thaw_ch$ci
+thaw_ch$c95 <- thaw_ch$mean + thaw_ch$ci
 
-air <- subset(thaw.ch, site == "AIR")
-blk <- subset(thaw.ch, site == "BLK")
-ppa <- subset(thaw.ch, site == "PPA")
-ppd <- subset(thaw.ch, site == "PPD")
+air <- subset(thaw_ch, site == "AIR")
+blk <- subset(thaw_ch, site == "BLK")
+ppa <- subset(thaw_ch, site == "PPA")
+ppd <- subset(thaw_ch, site == "PPD")
 
-air.lm <- lm(air$mean~air$year)
-blk.lm <- lm(blk$mean~blk$year)
-ppa.lm <- lm(ppa$mean~ppa$year)
-ppd.lm <- lm(ppd$mean~ppd$year)
+air_lm <- lm(air$mean~air$year)
+blk_lm <- lm(blk$mean~blk$year)
+ppa_lm <- lm(ppa$mean~ppa$year)
+ppd_lm <- lm(ppd$mean~ppd$year)
 
-summary(air.lm) # b0 = -0.6659, ns
-summary(blk.lm) # b0 =  1.3559, p = 0.00613
-summary(ppa.lm) # b0 =  0.3545, p = 0.0152
-summary(ppd.lm) # b0 =  0.4459, p = 0.0319
+summary(air_lm) # ns
+summary(blk_lm) # SIG
+summary(ppa_lm) # SIG
+summary(ppd_lm) # SIG
 
-blk.slope <- round(coef(blk.lm)[[2]], 3)
-ppa.slope <- round(coef(ppa.lm)[[2]], 3)
-ppd.slope <- round(coef(ppd.lm)[[2]], 3)
+blk_slope <- round(coef(blk_lm)[[2]], 3)
+ppa_slope <- round(coef(ppa_lm)[[2]], 3)
+ppd_slope <- round(coef(ppd_lm)[[2]], 3)
 
-jpeg("/Users/sdmamet/Desktop/Workspace/Earthwatch/Churchill/figures/thaw_depth_2022.jpg",
-     height = 5, width = 6, res = 300, units = "in")
+jpeg(sprintf("./Earthwatch/Churchill/figures/thaw_depth_%s.jpeg", year), width = 6, height = 5, units = "in", res = 300)
 par(mar = c(4,4,2,1))
 par(xpd = FALSE)
+
 # PPA
-plot(ppa$year, ppa$mean, type='n', xlim = c(2002,2022), ylim = rev(c(35,110)), xaxt='n',yaxt = "n", ann=FALSE)# yaxs = "i", xaxs = "i", xlab = "", ylab = "")
-polygon(c(ppa$year[-c(nrow(ppa), nrow(ppa)-1)], 
-          rev(ppa$year[-c(nrow(ppa), nrow(ppa)-1)])), 
-        c(ppa$c95[-c(nrow(ppa), nrow(ppa)-1)], rev(ppa$c5[-c(nrow(ppa), nrow(ppa)-1)])), col = "olivedrab1", border = NA)
-points(ppa[c(1,3,nrow(ppa)),1], ppa[c(1,3,nrow(ppa)),4], col = alpha("olivedrab1",0.6), pch = 15)
-lines(ppa$year, ppa$mean, xlim = c(2002,2022), ylim = rev(c(35,110)), type = "l", lwd=2, col = "olivedrab4")
+plot(ppa$year, ppa$mean, type='n', xlim = c(2002,year), ylim = rev(c(35,110)), xaxt='n',yaxt = "n", ann=FALSE)# yaxs = "i", xaxs = "i", xlab = "", ylab = "")
+poly_na(ppa, "olivedrab1")
+points(ppa[c(1,3,c(nrow(ppa):nrow(ppa)-1)),1], ppa[c(1,3,c(nrow(ppa):nrow(ppa)-1)),4], col = alpha("olivedrab1",0.6), pch = 15)
+lines(ppa$year, ppa$mean, type = "l", lwd=2, col = "olivedrab4")
 # legend("topleft", "PPA (17 m.a.s.l.)", bty = "n", inset = c(0,0.05))
-abline(coef(ppa.lm),lty=2, col = "olivedrab4")
+abline(coef(ppa_lm),lty=2, col = "olivedrab4")
 
 # PPD
-polygon(c(ppd$year[-c(nrow(ppd), nrow(ppd)-1)], rev(ppd$year[-c(nrow(ppd), nrow(ppd)-1)])), c(ppd$c95[-c(nrow(ppd), nrow(ppd)-1)], rev(ppd$c5[-c(nrow(ppd), nrow(ppd)-1)])), col = "darkorchid1", border = NA)
-lines(ppd$year, ppd$mean, xlim = c(2002,2022), ylim = rev(c(35,110)), type = "l", lwd=2, col = "darkorchid4")
-points(ppd[c(1,3,nrow(ppd)),1], ppd[c(1,3,nrow(ppd)),4], col = alpha("darkorchid4",0.6), pch = 15)
+poly_na(ppd, "darkorchid1")
+lines(ppd$year, ppd$mean, type = "l", lwd=2, col = "darkorchid4")
+points(ppd[c(1,3),1], ppd[c(1,3),4], col = alpha("darkorchid4",0.6), pch = 15)
 # legend("topleft", "PPD (17 m.a.s.l.)", bty = "n", inset = c(0,0.05))
-abline(coef(ppd.lm),lty=2, col = "darkorchid4")
+abline(coef(ppd_lm),lty=2, col = "darkorchid4")
 
 # BLK
-polygon(c(blk$year[-c(nrow(blk), nrow(blk)-1)], rev(blk$year[-c(nrow(blk), nrow(blk)-1)])), c(blk$c95[-c(nrow(blk), nrow(blk)-1)], rev(blk$c5[-c(nrow(blk), nrow(blk)-1)])), col = alpha("firebrick1",0.6), border = NA)
-lines(blk$year, blk$mean, xlim = c(2002,2022), ylim = rev(c(35,110)), type = "l", lwd=2, col = "firebrick4")
-points(blk[c(1,3,nrow(blk)),1], blk[c(1,3,nrow(blk)),4], col = alpha("darkorchid4",0.6), pch = 15)
-abline(coef(blk.lm),lty=2, col = "firebrick4")
+poly_na(blk, "firebrick1")
+lines(blk$year, blk$mean, type = "l", lwd=2, col = "firebrick4")
+points(blk[c(nrow(blk)-1),1], blk[c(nrow(blk)-1),4], col = alpha("firebrick4",0.6), pch = 15)
+abline(coef(blk_lm),lty=2, col = "firebrick4")
 
 # AIR
-polygon(c(air$year, rev(air$year)), c(air$c95, rev(air$c5)), col = alpha("darkslategray1",0.6), border = NA)
-lines(air$year, air$mean, xlim = c(2002,2022), ylim = rev(c(35,110)), type = "l", lwd=2, col = "darkslategray4")
+poly_na(air, "darkslategray1")
+lines(air$year, air$mean, type = "l", lwd=2, col = "darkslategray4")
 
 # Regression slopes
-legend("bottomleft", legend=bquote("PPA slope = " ~ .(-ppa.slope) ~ "cm yr"^-1), bty = "n", inset = c(0.0,0.12), text.col = "olivedrab4")
-legend("bottomleft", legend=bquote("PPD slope = " ~ .(-ppd.slope) ~ "cm yr"^-1), bty = "n", inset = c(0.0,0.06), text.col = "darkorchid4")
-legend("bottomleft", legend=bquote("BLK slope = " ~ .(-blk.slope) ~ "cm yr"^-1), bty = "n", inset = c(0.0,0.0), text.col = "firebrick4")
+legend("bottomleft", legend=bquote("PPA slope = " ~ .(-ppa_slope) ~ "cm yr"^-1), bty = "n", inset = c(0.0,0.12), text.col = "olivedrab4")
+legend("bottomleft", legend=bquote("PPD slope = " ~ .(-ppd_slope) ~ "cm yr"^-1), bty = "n", inset = c(0.0,0.06), text.col = "darkorchid4")
+legend("bottomleft", legend=bquote("BLK slope = " ~ .(-blk_slope) ~ "cm yr"^-1), bty = "n", inset = c(0.0,0.0), text.col = "firebrick4")
 
 # Axes
-axis(1, at = seq(2002,2022,1), labels = NA)
-axis(1, at = seq(2002,2022,2), labels = seq(2002,2022,2))
+axis(1, at = seq(2002,year,1), labels = NA)
+axis(1, at = seq(2002,year,2), labels = seq(2002,year,2))
 axis(2, at = rev(seq(40,110,10)), labels = NA)
 axis(2, at = rev(seq(40,100,20)), labels = rev(seq(40,100,20)), tick = FALSE)
 mtext(side = 1, "Year", line = 2.5)
