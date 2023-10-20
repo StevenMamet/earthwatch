@@ -12,6 +12,7 @@ setwd("~/Desktop/Workspace/")
 # Constants ----
 year <- 2023
 n_yr <- 6
+
 # Read in the GTREE data ----
 gtree_2021 <- read.csv("./Earthwatch/MacPass/data/GTREE_MM_2021.csv", stringsAsFactors = T)
 

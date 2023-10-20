@@ -42,7 +42,7 @@ poly_na <- function(df, color) {
   }
 }
 
-#***************************************************************
+#_______________________________----
 # Microclimate ----
 ch <- read.csv("./Earthwatch/Churchill/data/microclimate_20000101_20221010_filled.csv", header = T)[-1]
 
@@ -281,7 +281,7 @@ abline(coef(ppd_lm),lty=2, col = "darkorchid4")
 # BLK
 poly_na(blk, "firebrick1")
 lines(blk$year, blk$mean, type = "l", lwd=2, col = "firebrick4")
-points(blk[c(nrow(blk)-1),1], blk[c(nrow(blk)-1),4], col = alpha("firebrick4",0.6), pch = 15)
+# points(blk[c(nrow(blk)-1),1], blk[c(nrow(blk)-1),4], col = alpha("firebrick4",0.6), pch = 15)
 abline(coef(blk_lm),lty=2, col = "firebrick4")
 
 # AIR
@@ -307,7 +307,7 @@ legend(2002,22, c("AIR","PPA","PPD","BLK"), col = c("darkslategray1","olivedrab1
        bty = "n", pch = 15, pt.cex = c(1,1), text.width = 2, y.intersp = 1, inset = c(0.05,-0.02))
 dev.off()
 
-#***************************************************************
+#_______________________________----
 # GTREE exclosures ----
 ch <- read.csv(file = "~/Desktop/Workspace/Earthwatch/Churchill/data/gtree_ch_exclosures.csv", header = TRUE)
 
@@ -402,8 +402,6 @@ ch.tis.bspruce.ex3 <- subset(ch.tis, species == "bs" & exclosure == "yes" & sow.
 ch.tis.bspruce.no3 <- subset(ch.tis, species == "bs" & exclosure == "no" & sow.year == 2018)
 ch.rid.bspruce.ex3 <- subset(ch.rid, species == "bs" & exclosure == "yes" & sow.year == 2018)
 ch.rid.bspruce.no3 <- subset(ch.rid, species == "bs" & exclosure == "no" & sow.year == 2018)
-
-
 
 x1a <- factor(ch.tun.larch.ex1[ch.tun.larch.ex1$sow.year==2016,"treat"], levels = c("2","4"))
 x1b <- factor(ch.tun.larch.no1[ch.tun.larch.no1$sow.year==2016,"treat"], levels = c("2","4"))

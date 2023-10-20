@@ -1,6 +1,7 @@
 # devtools::install_github("kaitlynstrickfaden/edger", build_vignettes = TRUE, force = TRUE)
 
 library(edger)
+library(imager)
 library(tidyverse)
 library(lubridate)
 library(zoo) # Interpolating snow data
