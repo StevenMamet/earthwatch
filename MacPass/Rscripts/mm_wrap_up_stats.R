@@ -4,6 +4,7 @@ library(pscl)
 library(lmtest)
 library(scales)
 library(wesanderson)
+library(patchwork)
 
 rm(list = ls())
 
@@ -1492,7 +1493,8 @@ mm <- mm %>%
 
 mm_temps_season <- mm %>% 
   group_by(season_year, season) %>% 
-  summarise(across(ends_with(c("_150","_0","_neg150")), ~ mean(.x, na.rm = TRUE)))
+  summarise(across(ends_with(c("_150","_0","_neg150")), ~ mean(.x, na.rm = TRUE))) %>% 
+  ungroup()
 
 mm_temps_w <- subset(mm_temps_season, season == "warm")
 mm_temps_c <- subset(mm_temps_season, season == "cool")
@@ -1572,6 +1574,101 @@ rownames(per_reg_df) <- NULL
 per_reg_df <- per_reg_df %>% 
   pivot_wider(names_from = coefficient, values_from = c(Estimate, Std..Error, t.value, p_val)) %>% 
   mutate(keep = ifelse(p_val_slope < 0.05, "keep", ""))
+
+
+
+fig4a <- mm_temps_w %>% 
+  filter(season_year != year) %>% 
+  ggplot(aes(x = season_year, y = bp_150)) + 
+  geom_line(color = "darkred") +
+  geom_line(aes(y = hf_150), color = "red") +
+  geom_line(data = mm_temps_w %>% slice(n_pts_w_d6), aes(y = d6_150), color = "orange") +
+  geom_line(aes(y = d2_150), color = "yellow3") +
+  geom_line(aes(y = gf_150), color = "blue") + 
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
+        plot.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  labs(x = "", y = expression('Air ('*~degree*C*')'))
+
+fig4b <- mm_temps_w %>% 
+  filter(season_year != year) %>% 
+  ggplot(aes(x = season_year, y = bp_0)) + 
+  geom_line(color = "darkred") +
+  geom_line(aes(y = hf_0), color = "red") +
+  geom_line(data = mm_temps_w %>% slice(n_pts_w_d6), aes(y = d6_0), color = "orange") +
+  geom_line(aes(y = d2_0), color = "yellow3") +
+  geom_line(aes(y = gf_0), color = "blue") + 
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
+        plot.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  labs(x = "", y = expression('Ground surface ('*~degree*C*')'))
+
+fig4c <- mm_temps_w %>% 
+  filter(season_year != year) %>% 
+  ggplot(aes(x = season_year, y = bp_neg150)) + 
+  geom_line(color = "darkred") +
+  geom_line(aes(y = hf_neg150), color = "red") +
+  geom_line(data = mm_temps_w %>% slice(n_pts_w_d6), aes(y = d6_neg150), color = "orange") +
+  geom_line(aes(y = d2_neg150), color = "yellow3") +
+  geom_line(aes(y = gf_neg150), color = "blue") + 
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
+        plot.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  labs(x = "", y = expression('Subsurface ('*~degree*C*')'))
+
+fig4d <- mm_temps_c %>% 
+  filter(season_year != year) %>% 
+  ggplot(aes(x = season_year, y = bp_150)) + 
+  geom_line(color = "darkred") +
+  geom_line(aes(y = hf_150), color = "red") +
+  geom_line(data = mm_temps_c %>% slice(n_pts_c_d6), aes(y = d6_150), color = "orange") +
+  geom_line(aes(y = d2_150), color = "yellow3") +
+  geom_line(aes(y = gf_150), color = "blue") + 
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
+        plot.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  labs(x = "", y = "")
+
+fig4e <- mm_temps_c %>% 
+  filter(season_year != year) %>% 
+  ggplot(aes(x = season_year, y = bp_0)) + 
+  geom_line(color = "darkred") +
+  geom_line(aes(y = hf_0), color = "red") +
+  geom_line(data = mm_temps_c %>% slice(n_pts_c_d6), aes(y = d6_0), color = "orange") +
+  geom_line(aes(y = d2_0), color = "yellow3") +
+  geom_line(aes(y = gf_0), color = "blue") + 
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
+        plot.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  labs(x = "", y = "")
+
+fig4f <- mm_temps_c %>% 
+  filter(season_year != year) %>% 
+  ggplot(aes(x = season_year, y = bp_neg150)) + 
+  geom_line(color = "darkred") +
+  geom_line(aes(y = hf_neg150), color = "red") +
+  geom_line(data = mm_temps_c %>% slice(n_pts_c_d6), aes(y = d6_neg150), color = "orange") +
+  geom_line(aes(y = d2_neg150), color = "yellow3") +
+  geom_line(aes(y = gf_neg150), color = "blue") + 
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"), # top, right, bottom, left
+        plot.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  labs(x = NULL, y = "")
+
+(fig4a | fig4d) / (fig4b | fig4e) / (fig4c | fig4f)
+ggsave(sprintf("./earthwatch/MacPass/Reports/EW%s_Figure04.jpg", year), width = 6, height = 7, dpi = 300)
 
 ## Export at 6 x 3.5
 
