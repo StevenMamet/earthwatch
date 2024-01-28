@@ -1576,99 +1576,108 @@ per_reg_df <- per_reg_df %>%
   mutate(keep = ifelse(p_val_slope < 0.05, "keep", ""))
 
 
+df_plot <- mm_temps_season %>%
+  select(-mean_150) %>%
+  pivot_longer(cols = bp_150:gf_neg150) %>% 
+  arrange(season, name, season_year) %>% 
+  filter(!(name == "d6_0" & season_year < 1996)) %>% 
+  filter(!(name == "d6_150" & season_year < 1996)) %>% 
+  filter(!(name == "d6_neg150" & season_year < 1996)) 
 
-fig4a <- mm_temps_w %>% 
-  filter(season_year != year) %>% 
-  ggplot(aes(x = season_year, y = bp_150)) + 
-  geom_line(color = "darkred") +
-  geom_line(aes(y = hf_150), color = "red") +
-  geom_line(data = mm_temps_w %>% slice(n_pts_w_d6), aes(y = d6_150), color = "orange") +
-  geom_line(aes(y = d2_150), color = "yellow3") +
-  geom_line(aes(y = gf_150), color = "blue") + 
-  theme_bw() +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
-        plot.background = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-  labs(x = "", y = expression('Air ('*~degree*C*')'))
+col_pal <- c("darkred","red","orange","yellow3","blue")
 
-fig4b <- mm_temps_w %>% 
-  filter(season_year != year) %>% 
-  ggplot(aes(x = season_year, y = bp_0)) + 
-  geom_line(color = "darkred") +
-  geom_line(aes(y = hf_0), color = "red") +
-  geom_line(data = mm_temps_w %>% slice(n_pts_w_d6), aes(y = d6_0), color = "orange") +
-  geom_line(aes(y = d2_0), color = "yellow3") +
-  geom_line(aes(y = gf_0), color = "blue") + 
+fig4a <- df_plot %>% 
+  filter(season_year != year, season == "warm") %>% 
+  filter(grepl("_150", name)) %>% 
+  mutate(name = factor(name, levels = c("bp_150","hf_150","d6_150","d2_150","gf_150"))) %>% 
+  ggplot(aes(x = season_year, y = value, color = name)) + geom_line() + 
+  geom_smooth(data = df_plot %>% filter(season_year != year, season == "warm") %>%
+                filter(grepl("_150", name)) %>% subset(name %in% c("bp_150","hf_150","gf_150")), 
+              aes(x = season_year, y = value, color = name),
+              method="lm", se=FALSE, linetype = 2, linewidth = 0.6) +
+  scale_colour_manual(values = col_pal) +
+  guides(color = "none") +
   theme_bw() +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
-        plot.background = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-  labs(x = "", y = expression('Ground surface ('*~degree*C*')'))
+  labs(x = "", y = expression('Air ('*degree*C*')'))
 
-fig4c <- mm_temps_w %>% 
-  filter(season_year != year) %>% 
-  ggplot(aes(x = season_year, y = bp_neg150)) + 
-  geom_line(color = "darkred") +
-  geom_line(aes(y = hf_neg150), color = "red") +
-  geom_line(data = mm_temps_w %>% slice(n_pts_w_d6), aes(y = d6_neg150), color = "orange") +
-  geom_line(aes(y = d2_neg150), color = "yellow3") +
-  geom_line(aes(y = gf_neg150), color = "blue") + 
+fig4b <- df_plot %>% 
+  filter(season_year != year, season == "warm") %>% 
+  filter(grepl("_0", name)) %>% 
+  mutate(name = factor(name, levels = c("bp_0","hf_0","d6_0","d2_0","gf_0"))) %>% 
+  ggplot(aes(x = season_year, y = value, color = name)) + geom_line() + 
+  geom_smooth(data = df_plot %>% filter(season_year != year, season == "warm") %>%
+                filter(grepl("_0", name)) %>% subset(name %in% c("gf_0")), 
+              aes(x = season_year, y = value, color = name),
+              method="lm", se=FALSE, linetype = 2, linewidth = 0.6) +
+  scale_colour_manual(values = col_pal) +
+  guides(color = "none") +
   theme_bw() +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
-        plot.background = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-  labs(x = "", y = expression('Subsurface ('*~degree*C*')'))
+  labs(x = "", y = expression('Ground surface ('*degree*C*')'))
 
-fig4d <- mm_temps_c %>% 
-  filter(season_year != year) %>% 
-  ggplot(aes(x = season_year, y = bp_150)) + 
-  geom_line(color = "darkred") +
-  geom_line(aes(y = hf_150), color = "red") +
-  geom_line(data = mm_temps_c %>% slice(n_pts_c_d6), aes(y = d6_150), color = "orange") +
-  geom_line(aes(y = d2_150), color = "yellow3") +
-  geom_line(aes(y = gf_150), color = "blue") + 
+fig4c <- df_plot %>% 
+  filter(season_year != year, season == "warm") %>% 
+  filter(grepl("_neg150", name)) %>% 
+  mutate(name = factor(name, levels = c("bp_neg150","hf_neg150","d6_neg150","d2_neg150","gf_neg150"))) %>% 
+  ggplot(aes(x = season_year, y = value, color = name)) + geom_line() + 
+  geom_smooth(method="lm", se=FALSE, linetype = 2, linewidth = 0.6) +
+  scale_colour_manual(values = col_pal) +
+  guides(color = "none") +
   theme_bw() +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
-        plot.background = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
+  labs(x = "", y = expression('Subsurface ('*degree*C*')'))
+
+fig4d <- df_plot %>% 
+  filter(season_year != year, season == "cool") %>% 
+  filter(grepl("_150", name)) %>% 
+  mutate(name = factor(name, levels = c("bp_150","hf_150","d6_150","d2_150","gf_150"))) %>% 
+  ggplot(aes(x = season_year, y = value, color = name)) + geom_line() + 
+  scale_colour_manual(values = col_pal) +
+  guides(color = "none") +
+  theme_bw() +
   labs(x = "", y = "")
 
-fig4e <- mm_temps_c %>% 
-  filter(season_year != year) %>% 
-  ggplot(aes(x = season_year, y = bp_0)) + 
-  geom_line(color = "darkred") +
-  geom_line(aes(y = hf_0), color = "red") +
-  geom_line(data = mm_temps_c %>% slice(n_pts_c_d6), aes(y = d6_0), color = "orange") +
-  geom_line(aes(y = d2_0), color = "yellow3") +
-  geom_line(aes(y = gf_0), color = "blue") + 
+fig4e <- df_plot %>% 
+  filter(season_year != year, season == "cool") %>% 
+  filter(grepl("_0", name)) %>% 
+  mutate(name = factor(name, levels = c("bp_0","hf_0","d6_0","d2_0","gf_0"))) %>% 
+  ggplot(aes(x = season_year, y = value, color = name)) + geom_line() + 
+  geom_smooth(data = df_plot %>% filter(season_year != year, season == "cool") %>%
+                filter(grepl("_0", name)) %>% subset(name %in% c("bp_0","hf_0","gf_0")), 
+              aes(x = season_year, y = value, color = name),
+              method="lm", se=FALSE, linetype = 2, linewidth = 0.6) +
+  scale_colour_manual(values = col_pal) +
+  guides(color = "none") +
   theme_bw() +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"), 
-        plot.background = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
   labs(x = "", y = "")
 
-fig4f <- mm_temps_c %>% 
-  filter(season_year != year) %>% 
-  ggplot(aes(x = season_year, y = bp_neg150)) + 
-  geom_line(color = "darkred") +
-  geom_line(aes(y = hf_neg150), color = "red") +
-  geom_line(data = mm_temps_c %>% slice(n_pts_c_d6), aes(y = d6_neg150), color = "orange") +
-  geom_line(aes(y = d2_neg150), color = "yellow3") +
-  geom_line(aes(y = gf_neg150), color = "blue") + 
+fig4f <- df_plot %>% 
+  filter(season_year != year, season == "cool") %>% 
+  filter(grepl("_neg150", name)) %>% 
+  mutate(name = factor(name, levels = c("bp_neg150","hf_neg150","d6_neg150","d2_neg150","gf_neg150"))) %>% 
+  ggplot(aes(x = season_year, y = value, color = name)) + geom_line() + 
+  geom_smooth(data = df_plot %>% filter(season_year != year, season == "cool") %>%
+                filter(grepl("_neg150", name)) %>% subset(name %in% c("bp_neg150","gf_neg150")), aes(x = season_year, y = value, color = name),
+                method="lm", se=FALSE, linetype = 2, linewidth = 0.6) +
+  scale_colour_manual(values = col_pal, labels = c("BP","HF","D6","D2","GF")) +
   theme_bw() +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"), # top, right, bottom, left
-        plot.background = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-  labs(x = NULL, y = "")
+  labs(x = "", y = "", color = "Site")
 
-(fig4a | fig4d) / (fig4b | fig4e) / (fig4c | fig4f)
-ggsave(sprintf("./earthwatch/MacPass/Reports/EW%s_Figure04.jpg", year), width = 6, height = 7, dpi = 300)
+jpeg(sprintf("./earthwatch/MacPass/Reports/EW%s_Figure04.jpg", year), width = 6, height = 7, units = "in", res = 300)
+combined <-
+  ((fig4a | fig4d) / (fig4b | fig4e) / (fig4c | fig4f)) + plot_layout(guides = "collect") & xlab(NULL) &
+  theme(
+    plot.margin = margin(-15,0,1,0), # top, right, bottom, left
+    plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "top",
+  )
+wrap_elements(panel = combined) +
+  labs(tag = "Year") +
+  theme(
+    plot.tag = element_text(size = rel(1)),
+    plot.tag.position = "bottom"
+  )
+dev.off()
 
 ## Export at 6 x 3.5
 
@@ -1992,7 +2001,8 @@ dev.off()
 ##
 
 # Export as 5 x 7
-jpeg(sprintf("./Earthwatch/MacPass/figures/pipeline_thaw_%s.jpeg", year), width = 5, height = 7, units = "in", res = 300)
+jpeg(sprintf("./earthwatch/MacPass/Reports/EW%s_Figure07.jpg", year), width = 5, height = 7, units = "in", res = 300)
+# jpeg(sprintf("./Earthwatch/MacPass/figures/pipeline_thaw_%s.jpeg", year), width = 5, height = 7, units = "in", res = 300)
 par(mfrow = c(3, 1))
 par(cex = 0.75)
 par(mar = c(1.3, 2.3, 1, 2.3), oma = c(2, 1, 0, 1)+0.2)
@@ -2045,6 +2055,7 @@ thaw_mm %>%
 ## Single-panel figure
 col_pal <- wes_palette("Darjeeling1", 8, type = "continuous")
 y_limit <- c(20,160)
+jpeg(sprintf("./earthwatch/MacPass/Reports/EW%s_Figure04.jpg", year), width = 6, height = 7, units = "in", res = 300)
 jpeg(sprintf("./Earthwatch/Macpass/figures/thaw_depth_%s.jpg", year),
      height = 5, width = 6, res = 300, units = "in")
 par(mar = c(4,4,2,1))
@@ -2146,3 +2157,126 @@ legend(1992,22, c("HF","BP","PF","D6","D2","GF","SF"), col = col_pal[c(1,3:8)], 
 dev.off()
 
 
+
+
+
+
+
+
+jpeg(sprintf("./earthwatch/MacPass/Reports/EW%s_Figure05.jpg", year), width = 6, height = 7, units = "in", res = 300)
+par(mfrow = c(4,2))
+par(mar = c(0.5, 2, 1, 2), oma = c(2.5,1.5,0,1.5))
+plot(hare$year, hare$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,120)), yaxs = "i", xaxs = "i", xlab = "", ylab = "", xaxt = "n" )
+polygon(c(rev(hare$year[-c(32:34)]), hare$year[-c(32:34)]), c(rev(hare$c95[-c(32:34)]), hare$c5[-c(32:34)]), col = alpha("darkred",0.6), border = NA)
+polygon(c(rev(hare$year[c(32:34)]), hare$year[c(32:34)]), c(rev(hare$c95[c(32:34)]), hare$c5[c(32:34)]), col = alpha("darkred",0.6), border = NA)
+lines(hare$year, hare$mean, col = 'darkred', lwd = 2)
+# points(hare$year[n_pts_c], hare$mean[n_pts_c], col = 'darkred', pch = 16)
+abline(coef(hare_lm), lty = 2, lwd = 2, col = "darkred")
+par(new = T)
+plot(hare$year, hare$n, col = 'darkred', type = "l", xlim = c(1990,2023), ylim = c(10,100), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(hare$year[n_pts_c], hare$n[n_pts_c], col = 'darkred', pch = 17)
+axis(side = 4, at = seq(0,40,10))
+legend("topleft", "HF (1260 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(hare_slope) ~ "cm yr"^-1), bty = "n")
+axis(1, labels = FALSE)
+
+plot(beaver$year, beaver$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,120)), yaxs = "i", xaxs = "i", xlab = "", ylab = "", xaxt = "n" )
+polygon(c(rev(beaver$year[-c(32:34)]), beaver$year[-c(32:34)]), c(rev(beaver$c95[-c(32:34)]), beaver$c5[-c(32:34)]), col = alpha("red",0.6), border = NA)
+polygon(c(rev(beaver$year[c(32:34)]), beaver$year[c(32:34)]), c(rev(beaver$c95[c(32:34)]), beaver$c5[c(32:34)]), col = alpha("red",0.6), border = NA)
+lines(beaver$year, beaver$mean, col = 'red', lwd = 2)
+# points(beaver$year[n_pts_c], beaver$mean[n_pts_c], col = 'red', pch = 16)
+abline(coef(beaver_lm), lty = 2, lwd = 2, col = "red")
+par(new = T)
+plot(beaver$year, beaver$n, col = 'red', type = "l", xlim = c(1990,2023), ylim = c(30,150), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(beaver$year[n_pts_c], beaver$n[n_pts_c], col = 'red', pch = 17)
+axis(side = 4, at = seq(0,80,20))
+legend("topleft", "BP (1272 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(beaver_slope) ~ "cm yr"^-1), bty = "n", inset = c(0,0.1))
+axis(1, labels = FALSE)
+
+plot(porsild_1$year, porsild_1$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,120)), yaxs = "i", xaxs = "i", xlab = "", ylab = "", xaxt = "n" )
+polygon(c(rev(porsild_1$year[-c(16:18)]), porsild_1$year[-c(16:18)]), c(rev(porsild_1$c95[-c(16:18)]), porsild_1$c5[-c(16:18)]), col = alpha("violet",0.6), border = NA)
+polygon(c(rev(porsild_1$year[c(16:18)]), porsild_1$year[c(16:18)]), c(rev(porsild_1$c95[c(16:18)]), porsild_1$c5[c(16:18)]), col = alpha("violet",0.6), border = NA)
+lines(porsild_1$year, porsild_1$mean, col = 'violet', lwd = 2)
+abline(coef(porsild_1_lm), lty = 2, lwd = 2, col = "violet")
+# points(porsild_1$year[16], porsild_1$mean[16], col = 'violet', pch = 16)
+par(new = T)
+plot(porsild_1$year, porsild_1$n, col = 'violet', type = "l", xlim = c(1990,2023), ylim = c(20,80), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(porsild_1$year[n_pts_c], porsild_1$n[n_pts_c], col = 'violet', pch = 17)
+axis(side = 4, at = seq(0,40,5))
+legend("topleft", "PF1 (1380 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(porsild_1_slope) ~ "cm yr"^-1), bty = "n", inset = c(0,0.1))
+axis(1, labels = FALSE)
+
+plot(porsild_2$year, porsild_2$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,120)), yaxs = "i", xaxs = "i", xlab = "", ylab = "", xaxt = "n" )
+polygon(c(rev(porsild_2$year[-c(16:18)]), porsild_2$year[-c(16:18)]), c(rev(porsild_2$c95[-c(16:18)]), porsild_2$c5[-c(16:18)]), col = alpha("violet",0.6), border = NA)
+polygon(c(rev(porsild_2$year[c(16:18)]), porsild_2$year[c(16:18)]), c(rev(porsild_2$c95[c(16:18)]), porsild_2$c5[c(16:18)]), col = alpha("violet",0.6), border = NA)
+lines(porsild_2$year, porsild_2$mean, col = 'violet', lwd = 2)
+# points(porsild_2$year[16], porsild_2$mean[16], col = 'violet', pch = 16)
+abline(coef(porsild_2_lm), lty = 2, lwd = 2, col = "violet")
+par(new = T)
+plot(porsild_2$year, porsild_2$n, col = 'violet', type = "l", xlim = c(1990,2023), ylim = c(0,120), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(porsild_2$year[n_pts_c], porsild_2$n[n_pts_c], col = 'violet', pch = 17)
+axis(side = 4, at = seq(0,30,5))
+legend("topleft", "PF2 (1380 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(porsild_2_slope) ~ "cm yr"^-1), bty = "n", inset = c(0,0.1))
+axis(1, labels = FALSE)
+
+plot(d6$year, d6$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,150)), yaxs = "i", xaxs = "i", xlab = "", ylab = "", xaxt = "n" )
+polygon(c(rev(d6$year[-c(32:34)]), d6$year[-c(32:34)]), c(rev(d6$c95[-c(32:34)]), d6$c5[-c(32:34)]), col = alpha("orange",0.6), border = NA)
+polygon(c(rev(d6$year[c(32:34)]), d6$year[c(32:34)]), c(rev(d6$c95[c(32:34)]), d6$c5[c(32:34)]), col = alpha("orange",0.6), border = NA)
+lines(d6$year, d6$mean, col = 'orange', lwd = 2)
+abline(coef(d6_lm), lty = 2, lwd = 2, col = "orange")
+# points(d6$year[n_pts_c], d6$mean[n_pts_c], col = 'orange', pch = 16)
+par(new = T)
+plot(d6$year, d6$n, col = 'orange', type = "l", xlim = c(1990,2023), ylim = c(5,120), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(d6$year[n_pts_c], d6$n[n_pts_c], col = 'orange', pch = 17)
+axis(side = 4, at = seq(0,40,10))
+legend("topleft", "D6 (1473 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(d6_slope) ~ "cm yr"^-1), bty = "n")
+axis(1, labels = FALSE)
+
+plot(d2$year, d2$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,150)), yaxs = "i", xaxs = "i", xlab = "", ylab = "", xaxt = "n" )
+polygon(c(rev(d2$year[-c(32:34)]), d2$year[-c(32:34)]), c(rev(d2$c95[-c(32:34)]), d2$c5[-c(32:34)]), col = alpha("yellow3",0.6), border = NA)
+polygon(c(rev(d2$year[c(32:34)]), d2$year[c(32:34)]), c(rev(d2$c95[c(32:34)]), d2$c5[c(32:34)]), col = alpha("yellow3",0.6), border = NA)
+lines(d2$year, d2$mean, col = 'yellow3', lwd = 2)
+# points(d2$year[n_pts_c], d2$mean[n_pts_c], col = 'yellow3', pch = 16)
+abline(coef(d2_lm), lty = 2, lwd = 2, col = "yellow3")
+par(new = T)
+plot(d2$year, d2$n, col = 'yellow3', type = "l", xlim = c(1990,2023), ylim = c(30,120), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+lines(d2$year[c(n_pts_c,33)], d2$n[c(n_pts_c,33)], col = 'yellow3', pch = 17)
+axis(side = 4, at = seq(10,60,10))
+legend("topleft", "D2 (1477 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(d2_slope) ~ "cm yr"^-1), bty = "n")
+axis(1, labels = FALSE)
+
+plot(goose$year, goose$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,180)), yaxs = "i", xaxs = "i", xlab = "", ylab = "")
+polygon(c(rev(goose$year[-c(32:34)]), goose$year[-c(32:34)]), c(rev(goose$c95[-c(32:34)]), goose$c5[-c(32:34)]), col = alpha("blue",0.6), border = NA)
+polygon(c(rev(goose$year[c(32:34)]), goose$year[c(32:34)]), c(rev(goose$c95[c(32:34)]), goose$c5[c(32:34)]), col = alpha("blue",0.6), border = NA)
+lines(goose$year, goose$mean, col = 'blue', lwd = 2)
+# points(goose$year[c(n_pts_c,33)], goose$mean[c(n_pts_c,33)], col = 'blue', pch = 16)
+abline(coef(goose_lm), lty = 2, lwd = 2, col = "blue")
+par(new = T)
+plot(goose$year, goose$n, col = 'blue', type = "l", xlim = c(1990,2023), ylim = c(5,160), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(goose$year[c(n_pts_c,33)], goose$n[c(n_pts_c,33)], col = 'blue', pch = 17)
+axis(side = 4, at = seq(10,60,10))
+legend("topleft", "GF (1621 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomleft", legend=bquote("Slope = " ~ .(goose_slope) ~ "cm yr"^-1), bty = "n", inset = c(0,0.2))
+mtext("Thaw depth (cm)", side=2, cex = 0.75, line = 0, outer = TRUE)
+mtext("Year", side=1,  cex=0.75, line = 1.2, outer = TRUE)
+
+plot(snow$year, snow$mean, type='n', xlim = c(1990,2023), ylim = rev(c(0,180)), yaxs = "i", xaxs = "i", xlab = "", ylab = "")
+polygon(c(rev(snow$year[c(1:8)]), snow$year[c(1:8)]), c(rev(snow$c95[c(1:8)]), snow$c5[c(1:8)]), col = alpha("royalblue1",0.6), border = NA)
+polygon(c(rev(snow$year[c(13:26)]), snow$year[c(13:26)]), c(rev(snow$c95[c(13:26)]), snow$c5[c(13:26)]), col = alpha("royalblue1",0.6), border = NA)
+polygon(c(rev(snow$year[c(28:nrow(snow))]), snow$year[c(28:nrow(snow))]), c(rev(snow$c95[c(28:nrow(snow))]), snow$c5[c(28:nrow(snow))]), col = alpha("royalblue1",0.6), border = NA)
+lines(snow$year, snow$mean, col = 'royalblue1', lwd = 2)
+# points(snow$year[28], snow$mean[28], col = 'royalblue1', pch = 16)
+abline(coef(snow_lm), lty = 2, lwd = 2, col = "royalblue1")
+par(new = T)
+plot(snow$year, snow$n, col = 'royalblue1', type = "l", xlim = c(1990,2023), ylim = c(5,220), yaxs = "i", xaxs = "i", xlab = "", ylab = "", axes = F)
+# points(snow$year[28], snow$n[28], col = 'royalblue1', pch = 17)
+axis(side = 4, at = seq(20,100,20))
+legend("topleft", "SF (1660 m.a.s.l.)", bty = "n")#, inset = c(-0.08,-0.15))
+legend("bottomright", legend=bquote("Slope = " ~ .(snow_slope) ~ "cm yr"^-1), bty = "n", inset = c(0,0.1))
+mtext("Probe points (n)", side=4, cex = 0.75, line = 0, outer = TRUE)
+dev.off()
