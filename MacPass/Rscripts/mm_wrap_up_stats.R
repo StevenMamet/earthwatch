@@ -14,6 +14,9 @@ setwd("~/Desktop/Workspace/")
 year <- 2023
 n_yr <- 6
 
+# Functions ----
+source("./earthwatch/MacPass/R_functions/R_functions.R")
+
 # Read in the GTREE data ----
 gtree_2021 <- read.csv("./Earthwatch/MacPass/data/GTREE_MM_2021.csv", stringsAsFactors = T)
 
@@ -30,6 +33,7 @@ gtree_21 <- gtree_2021 %>%
 mm <- read.csv(file = "./Earthwatch/MacPass/data/gtree_mm_exclosures.csv", header = TRUE)
 names(mm) <- gsub("\\.","_", names(mm))
 
+# Data wrangling
 mm <- mm %>% 
   mutate(germ_prop_via_int = as.integer(rescale(germ_prop_via, to = c(0,20)))) %>% 
   mutate(germ_prop_via_int = ifelse(is.na(germ_prop_via_int), 0, germ_prop_via_int),
@@ -38,47 +42,7 @@ mm <- mm %>%
          seeded = as.factor(seeded),
          plot = factor(plot))
 
-mm_nalp <- subset(mm, site == "nalp")
-mm_salp <- subset(mm, site == "salp")
-mm_sshr <- subset(mm, site == "sshr")
-mm_scut <- subset(mm, site == "scut")
-
-mm_nalp_fir_seed <- droplevels(subset(mm_nalp, seeded == 1 & species == "fir"))
-mm_salp_fir_seed <- droplevels(subset(mm_salp, seeded == 1 & species == "fir"))
-mm_sshr_fir_seed <- droplevels(subset(mm_sshr, seeded == 1 & species == "fir"))
-mm_scut_fir_seed <- droplevels(subset(mm_scut, seeded == 1 & species == "fir"))
-
-mm_nalp_spruce_seed <- droplevels(subset(mm_nalp, seeded == 1 & species == "spruce"))
-mm_salp_spruce_seed <- droplevels(subset(mm_salp, seeded == 1 & species == "spruce"))
-mm_sshr_spruce_seed <- droplevels(subset(mm_sshr, seeded == 1 & species == "spruce"))
-mm_scut_spruce_seed <- droplevels(subset(mm_scut, seeded == 1 & species == "spruce"))
-
-mm_nalp_fir_ex <- mm_nalp[mm_nalp$species == "fir" & mm_nalp$treatment %in% c("seeded","seeded.scarified") & mm_nalp$exclosure == "yes",]
-mm_nalp_fir_no <- mm_nalp[mm_nalp$species == "fir" & mm_nalp$treatment %in% c("seeded","seeded.scarified") & mm_nalp$exclosure == "no",]
-mm_salp_fir_ex <- mm_salp[mm_salp$species == "fir" & mm_salp$treatment %in% c("seeded","seeded.scarified") & mm_salp$exclosure == "yes",]
-mm_salp_fir_no <- mm_salp[mm_salp$species == "fir" & mm_salp$treatment %in% c("seeded","seeded.scarified") & mm_salp$exclosure == "no",]
-mm_sshr_fir_ex <- mm_scut[mm_scut$species == "fir" & mm_scut$treatment %in% c("seeded","seeded.scarified") & mm_scut$exclosure == "yes",]
-mm_sshr_fir_no <- mm_scut[mm_scut$species == "fir" & mm_scut$treatment %in% c("seeded","seeded.scarified") & mm_scut$exclosure == "no",]
-mm_scut_fir_ex <- mm_sshr[mm_sshr$species == "fir" & mm_sshr$treatment %in% c("seeded","seeded.scarified") & mm_sshr$exclosure == "yes",]
-mm_scut_fir_no <- mm_sshr[mm_sshr$species == "fir" & mm_sshr$treatment %in% c("seeded","seeded.scarified") & mm_sshr$exclosure == "no",]
-
-mm_nalp_spruce_ex <- mm_nalp[mm_nalp$species == "spruce" & mm_nalp$treatment %in% c("seeded","seeded.scarified") & mm_nalp$exclosure == "yes",]
-mm_nalp_spruce_no <- mm_nalp[mm_nalp$species == "spruce" & mm_nalp$treatment %in% c("seeded","seeded.scarified") & mm_nalp$exclosure == "no",]
-mm_salp_spruce_ex <- mm_salp[mm_salp$species == "spruce" & mm_salp$treatment %in% c("seeded","seeded.scarified") & mm_salp$exclosure == "yes",]
-mm_salp_spruce_no <- mm_salp[mm_salp$species == "spruce" & mm_salp$treatment %in% c("seeded","seeded.scarified") & mm_salp$exclosure == "no",]
-mm_sshr_spruce_ex <- mm_scut[mm_scut$species == "spruce" & mm_scut$treatment %in% c("seeded","seeded.scarified") & mm_scut$exclosure == "yes",]
-mm_sshr_spruce_no <- mm_scut[mm_scut$species == "spruce" & mm_scut$treatment %in% c("seeded","seeded.scarified") & mm_scut$exclosure == "no",]
-mm_scut_spruce_ex <- mm_sshr[mm_sshr$species == "spruce" & mm_sshr$treatment %in% c("seeded","seeded.scarified") & mm_sshr$exclosure == "yes",]
-mm_scut_spruce_no <- mm_sshr[mm_sshr$species == "spruce" & mm_sshr$treatment %in% c("seeded","seeded.scarified") & mm_sshr$exclosure == "no",]
-
-x1a <- factor(mm_nalp_fir_ex[,"treat"], levels = c("2","4"))
-x1b <- factor(mm_nalp_fir_no[,"treat"], levels = c("2","4"))
-x2a <- factor(mm_salp_fir_ex[,"treat"], levels = c("2","4"))
-x2b <- factor(mm_salp_fir_no[,"treat"], levels = c("2","4"))
-x3a <- factor(mm_scut_fir_ex[,"treat"], levels = c("2","4"))
-x3b <- factor(mm_scut_fir_no[,"treat"], levels = c("2","4"))
-x4a <- factor(mm_sshr_fir_ex[,"treat"], levels = c("2","4"))
-x4b <- factor(mm_sshr_fir_no[,"treat"], levels = c("2","4"))
+mm_list <- gtree_fun(mm, n_yr)
 
 #______-----
 ## Proportion fir germination cage/uncaged ----
@@ -88,13 +52,13 @@ par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
 par(mar = c(0.5, 2, 1, 1), oma = c(2,1,0,0))
 
 ## Nalp - Fir out of exclosures
-boxplot(mm_nalp_fir_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_nalp_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_nalp_fir_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_nalp_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## Nalp - Fir in exclosures
-boxplot(mm_nalp_fir_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_nalp_fir_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_nalp_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_nalp_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(a) North-facing alpine", bty = "n", inset = c(0,0))
@@ -103,37 +67,37 @@ legend("topright", c("Uncaged","Caged"), pt.bg = c("red", "blue"), col = "black"
        y.intersp = 0.7, inset = c(0.1,0.01), horiz = F)
 
 ## Salp - Fir out of exclosures
-boxplot(mm_salp_fir_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_salp_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_salp_fir_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_salp_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## Salp - Fir in exclosures
-boxplot(mm_salp_fir_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_salp_fir_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_salp_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_salp_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(b) South-facing alpine", bty = "n", inset = c(0,0))
 
 ## Scut - Fir out of exclosures
-boxplot(mm_scut_fir_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_scut_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_scut_fir_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_scut_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## Scut - Fir in exclosures
-boxplot(mm_scut_fir_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_scut_fir_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_scut_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_scut_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(c) South-facing shrub (cut)", bty = "n", inset = c(0,0))
 
 ## Sshr - Fir out of exclosures
-boxplot(mm_sshr_fir_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_sshr_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_sshr_fir_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_sshr_fir_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## sshr - Fir in exclosures
-boxplot(mm_sshr_fir_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_sshr_fir_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_sshr_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_sshr_fir_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 legend("topleft", "(d) South-facing shrub", bty = "n", inset = c(0,0))
 
@@ -150,13 +114,13 @@ par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
 par(mar = c(0.5, 2, 1, 1), oma = c(2,1,0,0))
 
 ## Nalp - Spruce out of exclosures
-boxplot(mm_nalp_spruce_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_nalp_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_nalp_spruce_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_nalp_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## Nalp - Spruce in exclosures
-boxplot(mm_nalp_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_nalp_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_nalp_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_nalp_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(a) North-facing alpine", bty = "n", inset = c(0,0))
@@ -165,37 +129,37 @@ legend("topright", c("Uncaged","Caged"), pt.bg = c("red", "blue"), col = "black"
        y.intersp = 0.7, inset = c(0.1,0.01), horiz = F)
 
 ## Salp - Spruce out of exclosures
-boxplot(mm_salp_spruce_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_salp_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_salp_spruce_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_salp_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## Salp - Spruce in exclosures
-boxplot(mm_salp_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_salp_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_salp_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_salp_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(b) South-facing alpine", bty = "n", inset = c(0,0))
 
 ## Scut - Spruce out of exclosures
-boxplot(mm_scut_spruce_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_scut_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_scut_spruce_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_scut_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## Scut - Spruce in exclosures
-boxplot(mm_scut_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_scut_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_scut_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_scut_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(c) South-facing shrub (cut)", bty = "n", inset = c(0,0))
 
 ## Sshr - Spruce out of exclosures
-boxplot(mm_sshr_spruce_no$germ_prop_via ~ x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
+boxplot(mm_list$mm_sshr_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), xlim = c(0.4,4.5), ylim = c(0,1.5), 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(mm_sshr_spruce_no$germ_prop_via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(mm_list$mm_sshr_spruce_no$germ_prop_via ~ mm_list$x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## sshr - Spruce in exclosures
-boxplot(mm_sshr_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(mm_sshr_spruce_ex$germ_prop_via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(mm_list$mm_sshr_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(mm_list$mm_sshr_spruce_ex$germ_prop_via ~ mm_list$x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 legend("topleft", "(d) South-facing shrub", bty = "n", inset = c(0,0))
 
@@ -205,611 +169,9 @@ mtext(side = 2, "Germination proportion of viable", outer = TRUE)
 dev.off()
 
 #______-----
-## Proportion fir survival cage/uncaged ----
-## NALP - fir
-mm_nalp_fir_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_fir_no$surv_prop_0[mm_nalp_fir_no$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_no$surv_prop_1[mm_nalp_fir_no$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_no$surv_prop_2[mm_nalp_fir_no$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_no$surv_prop_3[mm_nalp_fir_no$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_no$surv_prop_4[mm_nalp_fir_no$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_no$surv_prop_5[mm_nalp_fir_no$treatment == "seeded"])))),
-                                  surv = c(mm_nalp_fir_no$surv_prop_0[mm_nalp_fir_no$treatment == "seeded"],
-                                           mm_nalp_fir_no$surv_prop_1[mm_nalp_fir_no$treatment == "seeded"],
-                                           mm_nalp_fir_no$surv_prop_2[mm_nalp_fir_no$treatment == "seeded"],
-                                           mm_nalp_fir_no$surv_prop_3[mm_nalp_fir_no$treatment == "seeded"],
-                                           mm_nalp_fir_no$surv_prop_4[mm_nalp_fir_no$treatment == "seeded"],
-                                           mm_nalp_fir_no$surv_prop_5[mm_nalp_fir_no$treatment == "seeded"]))
-mm_nalp_fir_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_fir_ex$surv_prop_0[mm_nalp_fir_ex$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_ex$surv_prop_1[mm_nalp_fir_ex$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_ex$surv_prop_2[mm_nalp_fir_ex$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_ex$surv_prop_3[mm_nalp_fir_ex$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_ex$surv_prop_4[mm_nalp_fir_ex$treatment == "seeded"]),
-                                                        length(mm_nalp_fir_ex$surv_prop_5[mm_nalp_fir_ex$treatment == "seeded"])))),
-                                  surv = c(mm_nalp_fir_ex$surv_prop_0[mm_nalp_fir_ex$treatment == "seeded"],
-                                           mm_nalp_fir_ex$surv_prop_1[mm_nalp_fir_ex$treatment == "seeded"],
-                                           mm_nalp_fir_ex$surv_prop_2[mm_nalp_fir_ex$treatment == "seeded"],
-                                           mm_nalp_fir_ex$surv_prop_3[mm_nalp_fir_ex$treatment == "seeded"],
-                                           mm_nalp_fir_ex$surv_prop_4[mm_nalp_fir_ex$treatment == "seeded"],
-                                           mm_nalp_fir_ex$surv_prop_5[mm_nalp_fir_ex$treatment == "seeded"]))
-mm_nalp_fir_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_fir_no$surv_prop_0[mm_nalp_fir_no$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_no$surv_prop_1[mm_nalp_fir_no$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_no$surv_prop_2[mm_nalp_fir_no$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_no$surv_prop_3[mm_nalp_fir_no$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_no$surv_prop_4[mm_nalp_fir_no$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_no$surv_prop_5[mm_nalp_fir_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_nalp_fir_no$surv_prop_0[mm_nalp_fir_no$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_no$surv_prop_1[mm_nalp_fir_no$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_no$surv_prop_2[mm_nalp_fir_no$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_no$surv_prop_3[mm_nalp_fir_no$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_no$surv_prop_4[mm_nalp_fir_no$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_no$surv_prop_5[mm_nalp_fir_no$treatment == "seeded.scarified"]))
-mm_nalp_fir_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_fir_ex$surv_prop_0[mm_nalp_fir_ex$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_ex$surv_prop_1[mm_nalp_fir_ex$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_ex$surv_prop_2[mm_nalp_fir_ex$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_ex$surv_prop_3[mm_nalp_fir_ex$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_ex$surv_prop_4[mm_nalp_fir_ex$treatment == "seeded.scarified"]),
-                                                            length(mm_nalp_fir_ex$surv_prop_5[mm_nalp_fir_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_nalp_fir_ex$surv_prop_0[mm_nalp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_ex$surv_prop_1[mm_nalp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_ex$surv_prop_2[mm_nalp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_ex$surv_prop_3[mm_nalp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_ex$surv_prop_4[mm_nalp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_fir_ex$surv_prop_5[mm_nalp_fir_ex$treatment == "seeded.scarified"]))
-
-
-mm_nalp_fir_no_seed_mod <- lm(log1p(surv) ~ year, mm_nalp_fir_no_seed)
-mm_nalp_fir_no_seed_ci <- data.frame(predict(mm_nalp_fir_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_fir_no_seed_ci$fit <- exp(mm_nalp_fir_no_seed_ci$fit)-1
-mm_nalp_fir_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                  surv_mean = mm_nalp_fir_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_nalp_fir_ex_seed_mod <- lm(log1p(surv) ~ year, mm_nalp_fir_ex_seed)
-mm_nalp_fir_ex_seed_ci <- data.frame(predict(mm_nalp_fir_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_fir_ex_seed_ci$fit <- exp(mm_nalp_fir_ex_seed_ci$fit)-1
-mm_nalp_fir_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_nalp_fir_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_nalp_fir_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_nalp_fir_no_seedscar)
-mm_nalp_fir_no_seedscar_ci <- data.frame(predict(mm_nalp_fir_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_fir_no_seedscar_ci$fit <- exp(mm_nalp_fir_no_seedscar_ci$fit)-1
-mm_nalp_fir_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_nalp_fir_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_nalp_fir_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_nalp_fir_ex_seedscar)
-mm_nalp_fir_ex_seedscar_ci <- data.frame(predict(mm_nalp_fir_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_fir_ex_seedscar_ci$fit <- exp(mm_nalp_fir_ex_seedscar_ci$fit)-1
-mm_nalp_fir_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_nalp_fir_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-## SALP - fir
-mm_salp_fir_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_fir_no$surv_prop_0[mm_salp_fir_no$treatment == "seeded"]),
-                                                           length(mm_salp_fir_no$surv_prop_1[mm_salp_fir_no$treatment == "seeded"]),
-                                                           length(mm_salp_fir_no$surv_prop_2[mm_salp_fir_no$treatment == "seeded"]),
-                                                           length(mm_salp_fir_no$surv_prop_3[mm_salp_fir_no$treatment == "seeded"]),
-                                                           length(mm_salp_fir_no$surv_prop_4[mm_salp_fir_no$treatment == "seeded"]),
-                                                           length(mm_salp_fir_no$surv_prop_5[mm_salp_fir_no$treatment == "seeded"])))),
-                                  surv = c(mm_salp_fir_no$surv_prop_0[mm_salp_fir_no$treatment == "seeded"],
-                                           mm_salp_fir_no$surv_prop_1[mm_salp_fir_no$treatment == "seeded"],
-                                           mm_salp_fir_no$surv_prop_2[mm_salp_fir_no$treatment == "seeded"],
-                                           mm_salp_fir_no$surv_prop_3[mm_salp_fir_no$treatment == "seeded"],
-                                           mm_salp_fir_no$surv_prop_4[mm_salp_fir_no$treatment == "seeded"],
-                                           mm_salp_fir_no$surv_prop_5[mm_salp_fir_no$treatment == "seeded"]))
-mm_salp_fir_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_fir_ex$surv_prop_0[mm_salp_fir_ex$treatment == "seeded"]),
-                                                           length(mm_salp_fir_ex$surv_prop_1[mm_salp_fir_ex$treatment == "seeded"]),
-                                                           length(mm_salp_fir_ex$surv_prop_2[mm_salp_fir_ex$treatment == "seeded"]),
-                                                           length(mm_salp_fir_ex$surv_prop_3[mm_salp_fir_ex$treatment == "seeded"]),
-                                                           length(mm_salp_fir_ex$surv_prop_4[mm_salp_fir_ex$treatment == "seeded"]),
-                                                           length(mm_salp_fir_ex$surv_prop_5[mm_salp_fir_ex$treatment == "seeded"])))),
-                                  surv = c(mm_salp_fir_ex$surv_prop_0[mm_salp_fir_ex$treatment == "seeded"],
-                                           mm_salp_fir_ex$surv_prop_1[mm_salp_fir_ex$treatment == "seeded"],
-                                           mm_salp_fir_ex$surv_prop_2[mm_salp_fir_ex$treatment == "seeded"],
-                                           mm_salp_fir_ex$surv_prop_3[mm_salp_fir_ex$treatment == "seeded"],
-                                           mm_salp_fir_ex$surv_prop_4[mm_salp_fir_ex$treatment == "seeded"],
-                                           mm_salp_fir_ex$surv_prop_5[mm_salp_fir_ex$treatment == "seeded"]))
-mm_salp_fir_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_fir_no$surv_prop_0[mm_salp_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_no$surv_prop_1[mm_salp_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_no$surv_prop_2[mm_salp_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_no$surv_prop_3[mm_salp_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_no$surv_prop_4[mm_salp_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_no$surv_prop_5[mm_salp_fir_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_salp_fir_no$surv_prop_0[mm_salp_fir_no$treatment == "seeded.scarified"],
-                                               mm_salp_fir_no$surv_prop_1[mm_salp_fir_no$treatment == "seeded.scarified"],
-                                               mm_salp_fir_no$surv_prop_2[mm_salp_fir_no$treatment == "seeded.scarified"],
-                                               mm_salp_fir_no$surv_prop_3[mm_salp_fir_no$treatment == "seeded.scarified"],
-                                               mm_salp_fir_no$surv_prop_4[mm_salp_fir_no$treatment == "seeded.scarified"],
-                                               mm_salp_fir_no$surv_prop_5[mm_salp_fir_no$treatment == "seeded.scarified"]))
-mm_salp_fir_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_fir_ex$surv_prop_0[mm_salp_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_ex$surv_prop_1[mm_salp_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_ex$surv_prop_2[mm_salp_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_ex$surv_prop_3[mm_salp_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_ex$surv_prop_4[mm_salp_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_fir_ex$surv_prop_5[mm_salp_fir_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_salp_fir_ex$surv_prop_0[mm_salp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_salp_fir_ex$surv_prop_1[mm_salp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_salp_fir_ex$surv_prop_2[mm_salp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_salp_fir_ex$surv_prop_3[mm_salp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_salp_fir_ex$surv_prop_4[mm_salp_fir_ex$treatment == "seeded.scarified"],
-                                               mm_salp_fir_ex$surv_prop_5[mm_salp_fir_ex$treatment == "seeded.scarified"]))
-
-
-mm_salp_fir_no_seed_mod <- lm(log1p(surv) ~ year, mm_salp_fir_no_seed)
-mm_salp_fir_no_seed_ci <- data.frame(predict(mm_salp_fir_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_fir_no_seed_ci$fit <- exp(mm_salp_fir_no_seed_ci$fit)-1
-mm_salp_fir_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_salp_fir_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_salp_fir_ex_seed_mod <- lm(log1p(surv) ~ year, mm_salp_fir_ex_seed)
-mm_salp_fir_ex_seed_ci <- data.frame(predict(mm_salp_fir_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_fir_ex_seed_ci$fit <- exp(mm_salp_fir_ex_seed_ci$fit)-1
-mm_salp_fir_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_salp_fir_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_salp_fir_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_salp_fir_no_seedscar)
-mm_salp_fir_no_seedscar_ci <- data.frame(predict(mm_salp_fir_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_fir_no_seedscar_ci$fit <- exp(mm_salp_fir_no_seedscar_ci$fit)-1
-mm_salp_fir_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_salp_fir_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_salp_fir_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_salp_fir_ex_seedscar)
-mm_salp_fir_ex_seedscar_ci <- data.frame(predict(mm_salp_fir_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_fir_ex_seedscar_ci$fit <- exp(mm_salp_fir_ex_seedscar_ci$fit)-1
-mm_salp_fir_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_salp_fir_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-
-#______-----
-## Proportion spruce survival cage/uncaged ----
-## NALP - spruce
-mm_nalp_spruce_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_spruce_no$surv_prop_0[mm_nalp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_no$surv_prop_1[mm_nalp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_no$surv_prop_2[mm_nalp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_no$surv_prop_3[mm_nalp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_no$surv_prop_4[mm_nalp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_no$surv_prop_5[mm_nalp_spruce_no$treatment == "seeded"])))),
-                                  surv = c(mm_nalp_spruce_no$surv_prop_0[mm_nalp_spruce_no$treatment == "seeded"],
-                                           mm_nalp_spruce_no$surv_prop_1[mm_nalp_spruce_no$treatment == "seeded"],
-                                           mm_nalp_spruce_no$surv_prop_2[mm_nalp_spruce_no$treatment == "seeded"],
-                                           mm_nalp_spruce_no$surv_prop_3[mm_nalp_spruce_no$treatment == "seeded"],
-                                           mm_nalp_spruce_no$surv_prop_4[mm_nalp_spruce_no$treatment == "seeded"],
-                                           mm_nalp_spruce_no$surv_prop_5[mm_nalp_spruce_no$treatment == "seeded"]))
-mm_nalp_spruce_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_spruce_ex$surv_prop_0[mm_nalp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_ex$surv_prop_1[mm_nalp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_ex$surv_prop_2[mm_nalp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_ex$surv_prop_3[mm_nalp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_ex$surv_prop_4[mm_nalp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_nalp_spruce_ex$surv_prop_5[mm_nalp_spruce_ex$treatment == "seeded"])))),
-                                  surv = c(mm_nalp_spruce_ex$surv_prop_0[mm_nalp_spruce_ex$treatment == "seeded"],
-                                           mm_nalp_spruce_ex$surv_prop_1[mm_nalp_spruce_ex$treatment == "seeded"],
-                                           mm_nalp_spruce_ex$surv_prop_2[mm_nalp_spruce_ex$treatment == "seeded"],
-                                           mm_nalp_spruce_ex$surv_prop_3[mm_nalp_spruce_ex$treatment == "seeded"],
-                                           mm_nalp_spruce_ex$surv_prop_4[mm_nalp_spruce_ex$treatment == "seeded"],
-                                           mm_nalp_spruce_ex$surv_prop_5[mm_nalp_spruce_ex$treatment == "seeded"]))
-mm_nalp_spruce_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_spruce_no$surv_prop_0[mm_nalp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_no$surv_prop_1[mm_nalp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_no$surv_prop_2[mm_nalp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_no$surv_prop_3[mm_nalp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_no$surv_prop_4[mm_nalp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_no$surv_prop_5[mm_nalp_spruce_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_nalp_spruce_no$surv_prop_0[mm_nalp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_no$surv_prop_1[mm_nalp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_no$surv_prop_2[mm_nalp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_no$surv_prop_3[mm_nalp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_no$surv_prop_4[mm_nalp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_no$surv_prop_5[mm_nalp_spruce_no$treatment == "seeded.scarified"]))
-mm_nalp_spruce_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_nalp_spruce_ex$surv_prop_0[mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_ex$surv_prop_1[mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_ex$surv_prop_2[mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_ex$surv_prop_3[mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_ex$surv_prop_4[mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_nalp_spruce_ex$surv_prop_5[mm_nalp_spruce_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_nalp_spruce_ex$surv_prop_0[mm_nalp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_ex$surv_prop_1[mm_nalp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_ex$surv_prop_2[mm_nalp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_ex$surv_prop_3[mm_nalp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_ex$surv_prop_4[mm_nalp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_nalp_spruce_ex$surv_prop_5[mm_nalp_spruce_ex$treatment == "seeded.scarified"]))
-
-mm_nalp_spruce_no_seed_mod <- lm(log1p(surv) ~ year, mm_nalp_spruce_no_seed)
-mm_nalp_spruce_no_seed_ci <- data.frame(predict(mm_nalp_spruce_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_spruce_no_seed_ci$fit <- exp(mm_nalp_spruce_no_seed_ci$fit)-1
-mm_nalp_spruce_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_nalp_spruce_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_nalp_spruce_ex_seed_mod <- lm(log1p(surv) ~ year, mm_nalp_spruce_ex_seed)
-mm_nalp_spruce_ex_seed_ci <- data.frame(predict(mm_nalp_spruce_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_spruce_ex_seed_ci$fit <- exp(mm_nalp_spruce_ex_seed_ci$fit)-1
-mm_nalp_spruce_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_nalp_spruce_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_nalp_spruce_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_nalp_spruce_no_seedscar)
-mm_nalp_spruce_no_seedscar_ci <- data.frame(predict(mm_nalp_spruce_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_spruce_no_seedscar_ci$fit <- exp(mm_nalp_spruce_no_seedscar_ci$fit)-1
-mm_nalp_spruce_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_nalp_spruce_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_nalp_spruce_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_nalp_spruce_ex_seedscar)
-mm_nalp_spruce_ex_seedscar_ci <- data.frame(predict(mm_nalp_spruce_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_nalp_spruce_ex_seedscar_ci$fit <- exp(mm_nalp_spruce_ex_seedscar_ci$fit)-1
-mm_nalp_spruce_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_nalp_spruce_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-## SALP - spruce
-mm_salp_spruce_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_spruce_no$surv_prop_0[mm_salp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_no$surv_prop_1[mm_salp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_no$surv_prop_2[mm_salp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_no$surv_prop_3[mm_salp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_no$surv_prop_4[mm_salp_spruce_no$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_no$surv_prop_5[mm_salp_spruce_no$treatment == "seeded"])))),
-                                  surv = c(mm_salp_spruce_no$surv_prop_0[mm_salp_spruce_no$treatment == "seeded"],
-                                           mm_salp_spruce_no$surv_prop_1[mm_salp_spruce_no$treatment == "seeded"],
-                                           mm_salp_spruce_no$surv_prop_2[mm_salp_spruce_no$treatment == "seeded"],
-                                           mm_salp_spruce_no$surv_prop_3[mm_salp_spruce_no$treatment == "seeded"],
-                                           mm_salp_spruce_no$surv_prop_4[mm_salp_spruce_no$treatment == "seeded"],
-                                           mm_salp_spruce_no$surv_prop_5[mm_salp_spruce_no$treatment == "seeded"]))
-mm_salp_spruce_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_spruce_ex$surv_prop_0[mm_salp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_ex$surv_prop_1[mm_salp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_ex$surv_prop_2[mm_salp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_ex$surv_prop_3[mm_salp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_ex$surv_prop_4[mm_salp_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_salp_spruce_ex$surv_prop_5[mm_salp_spruce_ex$treatment == "seeded"])))),
-                                  surv = c(mm_salp_spruce_ex$surv_prop_0[mm_salp_spruce_ex$treatment == "seeded"],
-                                           mm_salp_spruce_ex$surv_prop_1[mm_salp_spruce_ex$treatment == "seeded"],
-                                           mm_salp_spruce_ex$surv_prop_2[mm_salp_spruce_ex$treatment == "seeded"],
-                                           mm_salp_spruce_ex$surv_prop_3[mm_salp_spruce_ex$treatment == "seeded"],
-                                           mm_salp_spruce_ex$surv_prop_4[mm_salp_spruce_ex$treatment == "seeded"],
-                                           mm_salp_spruce_ex$surv_prop_5[mm_salp_spruce_ex$treatment == "seeded"]))
-mm_salp_spruce_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_spruce_no$surv_prop_0[mm_salp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_no$surv_prop_1[mm_salp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_no$surv_prop_2[mm_salp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_no$surv_prop_3[mm_salp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_no$surv_prop_4[mm_salp_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_no$surv_prop_5[mm_salp_spruce_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_salp_spruce_no$surv_prop_0[mm_salp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_no$surv_prop_1[mm_salp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_no$surv_prop_2[mm_salp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_no$surv_prop_3[mm_salp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_no$surv_prop_4[mm_salp_spruce_no$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_no$surv_prop_5[mm_salp_spruce_no$treatment == "seeded.scarified"]))
-mm_salp_spruce_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_salp_spruce_ex$surv_prop_0[mm_salp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_ex$surv_prop_1[mm_salp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_ex$surv_prop_2[mm_salp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_ex$surv_prop_3[mm_salp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_ex$surv_prop_4[mm_salp_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_salp_spruce_ex$surv_prop_5[mm_salp_spruce_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_salp_spruce_ex$surv_prop_0[mm_salp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_ex$surv_prop_1[mm_salp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_ex$surv_prop_2[mm_salp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_ex$surv_prop_3[mm_salp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_ex$surv_prop_4[mm_salp_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_salp_spruce_ex$surv_prop_5[mm_salp_spruce_ex$treatment == "seeded.scarified"]))
-
-mm_salp_spruce_no_seed_mod <- lm(log1p(surv) ~ year, mm_salp_spruce_no_seed)
-mm_salp_spruce_no_seed_ci <- data.frame(predict(mm_salp_spruce_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_spruce_no_seed_ci$fit <- exp(mm_salp_spruce_no_seed_ci$fit)-1
-mm_salp_spruce_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_salp_spruce_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_salp_spruce_ex_seed_mod <- lm(log1p(surv) ~ year, mm_salp_spruce_ex_seed)
-mm_salp_spruce_ex_seed_ci <- data.frame(predict(mm_salp_spruce_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_spruce_ex_seed_ci$fit <- exp(mm_salp_spruce_ex_seed_ci$fit)-1
-mm_salp_spruce_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_salp_spruce_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_salp_spruce_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_salp_spruce_no_seedscar)
-mm_salp_spruce_no_seedscar_ci <- data.frame(predict(mm_salp_spruce_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_spruce_no_seedscar_ci$fit <- exp(mm_salp_spruce_no_seedscar_ci$fit)-1
-mm_salp_spruce_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_salp_spruce_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_salp_spruce_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_salp_spruce_ex_seedscar)
-mm_salp_spruce_ex_seedscar_ci <- data.frame(predict(mm_salp_spruce_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_salp_spruce_ex_seedscar_ci$fit <- exp(mm_salp_spruce_ex_seedscar_ci$fit)-1
-mm_salp_spruce_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_salp_spruce_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-## SCUT - fir
-mm_scut_fir_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_fir_no$surv_prop_0[mm_scut_fir_no$treatment == "seeded"]),
-                                                           length(mm_scut_fir_no$surv_prop_1[mm_scut_fir_no$treatment == "seeded"]),
-                                                           length(mm_scut_fir_no$surv_prop_2[mm_scut_fir_no$treatment == "seeded"]),
-                                                           length(mm_scut_fir_no$surv_prop_3[mm_scut_fir_no$treatment == "seeded"]),
-                                                           length(mm_scut_fir_no$surv_prop_4[mm_scut_fir_no$treatment == "seeded"]),
-                                                           length(mm_scut_fir_no$surv_prop_5[mm_scut_fir_no$treatment == "seeded"])))),
-                                  surv = c(mm_scut_fir_no$surv_prop_0[mm_scut_fir_no$treatment == "seeded"],
-                                           mm_scut_fir_no$surv_prop_1[mm_scut_fir_no$treatment == "seeded"],
-                                           mm_scut_fir_no$surv_prop_2[mm_scut_fir_no$treatment == "seeded"],
-                                           mm_scut_fir_no$surv_prop_3[mm_scut_fir_no$treatment == "seeded"],
-                                           mm_scut_fir_no$surv_prop_4[mm_scut_fir_no$treatment == "seeded"],
-                                           mm_scut_fir_no$surv_prop_5[mm_scut_fir_no$treatment == "seeded"]))
-mm_scut_fir_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_fir_ex$surv_prop_0[mm_scut_fir_ex$treatment == "seeded"]),
-                                                           length(mm_scut_fir_ex$surv_prop_1[mm_scut_fir_ex$treatment == "seeded"]),
-                                                           length(mm_scut_fir_ex$surv_prop_2[mm_scut_fir_ex$treatment == "seeded"]),
-                                                           length(mm_scut_fir_ex$surv_prop_3[mm_scut_fir_ex$treatment == "seeded"]),
-                                                           length(mm_scut_fir_ex$surv_prop_4[mm_scut_fir_ex$treatment == "seeded"]),
-                                                           length(mm_scut_fir_ex$surv_prop_5[mm_scut_fir_ex$treatment == "seeded"])))),
-                                  surv = c(mm_scut_fir_ex$surv_prop_0[mm_scut_fir_ex$treatment == "seeded"],
-                                           mm_scut_fir_ex$surv_prop_1[mm_scut_fir_ex$treatment == "seeded"],
-                                           mm_scut_fir_ex$surv_prop_2[mm_scut_fir_ex$treatment == "seeded"],
-                                           mm_scut_fir_ex$surv_prop_3[mm_scut_fir_ex$treatment == "seeded"],
-                                           mm_scut_fir_ex$surv_prop_4[mm_scut_fir_ex$treatment == "seeded"],
-                                           mm_scut_fir_ex$surv_prop_5[mm_scut_fir_ex$treatment == "seeded"]))
-mm_scut_fir_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_fir_no$surv_prop_0[mm_scut_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_no$surv_prop_1[mm_scut_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_no$surv_prop_2[mm_scut_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_no$surv_prop_3[mm_scut_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_no$surv_prop_4[mm_scut_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_no$surv_prop_5[mm_scut_fir_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_scut_fir_no$surv_prop_0[mm_scut_fir_no$treatment == "seeded.scarified"],
-                                               mm_scut_fir_no$surv_prop_1[mm_scut_fir_no$treatment == "seeded.scarified"],
-                                               mm_scut_fir_no$surv_prop_2[mm_scut_fir_no$treatment == "seeded.scarified"],
-                                               mm_scut_fir_no$surv_prop_3[mm_scut_fir_no$treatment == "seeded.scarified"],
-                                               mm_scut_fir_no$surv_prop_4[mm_scut_fir_no$treatment == "seeded.scarified"],
-                                               mm_scut_fir_no$surv_prop_5[mm_scut_fir_no$treatment == "seeded.scarified"]))
-mm_scut_fir_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_fir_ex$surv_prop_0[mm_scut_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_ex$surv_prop_1[mm_scut_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_ex$surv_prop_2[mm_scut_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_ex$surv_prop_3[mm_scut_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_ex$surv_prop_4[mm_scut_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_fir_ex$surv_prop_5[mm_scut_fir_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_scut_fir_ex$surv_prop_0[mm_scut_fir_ex$treatment == "seeded.scarified"],
-                                               mm_scut_fir_ex$surv_prop_1[mm_scut_fir_ex$treatment == "seeded.scarified"],
-                                               mm_scut_fir_ex$surv_prop_2[mm_scut_fir_ex$treatment == "seeded.scarified"],
-                                               mm_scut_fir_ex$surv_prop_3[mm_scut_fir_ex$treatment == "seeded.scarified"],
-                                               mm_scut_fir_ex$surv_prop_4[mm_scut_fir_ex$treatment == "seeded.scarified"],
-                                               mm_scut_fir_ex$surv_prop_5[mm_scut_fir_ex$treatment == "seeded.scarified"]))
-
-
-# mm_scut_fir_no_seed_mod <- lm(log1p(surv) ~ year, mm_scut_fir_no_seed)
-# mm_scut_fir_no_seed_ci <- data.frame(predict(mm_scut_fir_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-# mm_scut_fir_no_seed_ci$fit <- exp(mm_scut_fir_no_seed_ci$fit)-1
-# mm_scut_fir_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-#                                        surv_mean = mm_scut_fir_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_scut_fir_ex_seed_mod <- lm(log1p(surv) ~ year, mm_scut_fir_ex_seed)
-mm_scut_fir_ex_seed_ci <- data.frame(predict(mm_scut_fir_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_scut_fir_ex_seed_ci$fit <- exp(mm_scut_fir_ex_seed_ci$fit)-1
-mm_scut_fir_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_scut_fir_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-# mm_scut_fir_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_scut_fir_no_seedscar)
-# mm_scut_fir_no_seedscar_ci <- data.frame(predict(mm_scut_fir_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-# mm_scut_fir_no_seedscar_ci$fit <- exp(mm_scut_fir_no_seedscar_ci$fit)-1
-# mm_scut_fir_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-#                                            surv_mean = mm_scut_fir_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_scut_fir_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_scut_fir_ex_seedscar)
-mm_scut_fir_ex_seedscar_ci <- data.frame(predict(mm_scut_fir_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_scut_fir_ex_seedscar_ci$fit <- exp(mm_scut_fir_ex_seedscar_ci$fit)-1
-mm_scut_fir_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_scut_fir_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-## SSHR - fir
-mm_sshr_fir_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_fir_no$surv_prop_0[mm_sshr_fir_no$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_no$surv_prop_1[mm_sshr_fir_no$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_no$surv_prop_2[mm_sshr_fir_no$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_no$surv_prop_3[mm_sshr_fir_no$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_no$surv_prop_4[mm_sshr_fir_no$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_no$surv_prop_5[mm_sshr_fir_no$treatment == "seeded"])))),
-                                  surv = c(mm_sshr_fir_no$surv_prop_0[mm_sshr_fir_no$treatment == "seeded"],
-                                           mm_sshr_fir_no$surv_prop_1[mm_sshr_fir_no$treatment == "seeded"],
-                                           mm_sshr_fir_no$surv_prop_2[mm_sshr_fir_no$treatment == "seeded"],
-                                           mm_sshr_fir_no$surv_prop_3[mm_sshr_fir_no$treatment == "seeded"],
-                                           mm_sshr_fir_no$surv_prop_4[mm_sshr_fir_no$treatment == "seeded"],
-                                           mm_sshr_fir_no$surv_prop_5[mm_sshr_fir_no$treatment == "seeded"]))
-mm_sshr_fir_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_fir_ex$surv_prop_0[mm_sshr_fir_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_ex$surv_prop_1[mm_sshr_fir_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_ex$surv_prop_2[mm_sshr_fir_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_ex$surv_prop_3[mm_sshr_fir_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_ex$surv_prop_4[mm_sshr_fir_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_fir_ex$surv_prop_5[mm_sshr_fir_ex$treatment == "seeded"])))),
-                                  surv = c(mm_sshr_fir_ex$surv_prop_0[mm_sshr_fir_ex$treatment == "seeded"],
-                                           mm_sshr_fir_ex$surv_prop_1[mm_sshr_fir_ex$treatment == "seeded"],
-                                           mm_sshr_fir_ex$surv_prop_2[mm_sshr_fir_ex$treatment == "seeded"],
-                                           mm_sshr_fir_ex$surv_prop_3[mm_sshr_fir_ex$treatment == "seeded"],
-                                           mm_sshr_fir_ex$surv_prop_4[mm_sshr_fir_ex$treatment == "seeded"],
-                                           mm_sshr_fir_ex$surv_prop_5[mm_sshr_fir_ex$treatment == "seeded"]))
-mm_sshr_fir_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_fir_no$surv_prop_0[mm_sshr_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_no$surv_prop_1[mm_sshr_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_no$surv_prop_2[mm_sshr_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_no$surv_prop_3[mm_sshr_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_no$surv_prop_4[mm_sshr_fir_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_no$surv_prop_5[mm_sshr_fir_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_sshr_fir_no$surv_prop_0[mm_sshr_fir_no$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_no$surv_prop_1[mm_sshr_fir_no$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_no$surv_prop_2[mm_sshr_fir_no$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_no$surv_prop_3[mm_sshr_fir_no$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_no$surv_prop_4[mm_sshr_fir_no$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_no$surv_prop_5[mm_sshr_fir_no$treatment == "seeded.scarified"]))
-mm_sshr_fir_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_fir_ex$surv_prop_0[mm_sshr_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_ex$surv_prop_1[mm_sshr_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_ex$surv_prop_2[mm_sshr_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_ex$surv_prop_3[mm_sshr_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_ex$surv_prop_4[mm_sshr_fir_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_fir_ex$surv_prop_5[mm_sshr_fir_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_sshr_fir_ex$surv_prop_0[mm_sshr_fir_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_ex$surv_prop_1[mm_sshr_fir_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_ex$surv_prop_2[mm_sshr_fir_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_ex$surv_prop_3[mm_sshr_fir_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_ex$surv_prop_4[mm_sshr_fir_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_fir_ex$surv_prop_5[mm_sshr_fir_ex$treatment == "seeded.scarified"]))
-
-# mm_sshr_fir_no_seed_mod <- lm(log1p(surv) ~ year, mm_sshr_fir_no_seed)
-# mm_sshr_fir_no_seed_ci <- data.frame(predict(mm_sshr_fir_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-# mm_sshr_fir_no_seed_ci$fit <- exp(mm_sshr_fir_no_seed_ci$fit)-1
-# mm_sshr_fir_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-#                                        surv_mean = mm_sshr_fir_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_sshr_fir_ex_seed_mod <- lm(log1p(surv) ~ year, mm_sshr_fir_ex_seed)
-mm_sshr_fir_ex_seed_ci <- data.frame(predict(mm_sshr_fir_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_sshr_fir_ex_seed_ci$fit <- exp(mm_sshr_fir_ex_seed_ci$fit)-1
-mm_sshr_fir_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_sshr_fir_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_sshr_fir_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_sshr_fir_no_seedscar)
-mm_sshr_fir_no_seedscar_ci <- data.frame(predict(mm_sshr_fir_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_sshr_fir_no_seedscar_ci$fit <- exp(mm_sshr_fir_no_seedscar_ci$fit)-1
-mm_sshr_fir_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_sshr_fir_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_sshr_fir_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_sshr_fir_ex_seedscar)
-mm_sshr_fir_ex_seedscar_ci <- data.frame(predict(mm_sshr_fir_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_sshr_fir_ex_seedscar_ci$fit <- exp(mm_sshr_fir_ex_seedscar_ci$fit)-1
-mm_sshr_fir_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_sshr_fir_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-## SCUT - spruce
-mm_scut_spruce_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_spruce_no$surv_prop_0[mm_scut_spruce_no$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_no$surv_prop_1[mm_scut_spruce_no$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_no$surv_prop_2[mm_scut_spruce_no$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_no$surv_prop_3[mm_scut_spruce_no$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_no$surv_prop_4[mm_scut_spruce_no$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_no$surv_prop_5[mm_scut_spruce_no$treatment == "seeded"])))),
-                                  surv = c(mm_scut_spruce_no$surv_prop_0[mm_scut_spruce_no$treatment == "seeded"],
-                                           mm_scut_spruce_no$surv_prop_1[mm_scut_spruce_no$treatment == "seeded"],
-                                           mm_scut_spruce_no$surv_prop_2[mm_scut_spruce_no$treatment == "seeded"],
-                                           mm_scut_spruce_no$surv_prop_3[mm_scut_spruce_no$treatment == "seeded"],
-                                           mm_scut_spruce_no$surv_prop_4[mm_scut_spruce_no$treatment == "seeded"],
-                                           mm_scut_spruce_no$surv_prop_5[mm_scut_spruce_no$treatment == "seeded"]))
-mm_scut_spruce_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_spruce_ex$surv_prop_0[mm_scut_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_ex$surv_prop_1[mm_scut_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_ex$surv_prop_2[mm_scut_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_ex$surv_prop_3[mm_scut_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_ex$surv_prop_4[mm_scut_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_scut_spruce_ex$surv_prop_5[mm_scut_spruce_ex$treatment == "seeded"])))),
-                                  surv = c(mm_scut_spruce_ex$surv_prop_0[mm_scut_spruce_ex$treatment == "seeded"],
-                                           mm_scut_spruce_ex$surv_prop_1[mm_scut_spruce_ex$treatment == "seeded"],
-                                           mm_scut_spruce_ex$surv_prop_2[mm_scut_spruce_ex$treatment == "seeded"],
-                                           mm_scut_spruce_ex$surv_prop_3[mm_scut_spruce_ex$treatment == "seeded"],
-                                           mm_scut_spruce_ex$surv_prop_4[mm_scut_spruce_ex$treatment == "seeded"],
-                                           mm_scut_spruce_ex$surv_prop_5[mm_scut_spruce_ex$treatment == "seeded"]))
-mm_scut_spruce_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_spruce_no$surv_prop_0[mm_scut_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_no$surv_prop_1[mm_scut_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_no$surv_prop_2[mm_scut_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_no$surv_prop_3[mm_scut_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_no$surv_prop_4[mm_scut_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_no$surv_prop_5[mm_scut_spruce_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_scut_spruce_no$surv_prop_0[mm_scut_spruce_no$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_no$surv_prop_1[mm_scut_spruce_no$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_no$surv_prop_2[mm_scut_spruce_no$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_no$surv_prop_3[mm_scut_spruce_no$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_no$surv_prop_4[mm_scut_spruce_no$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_no$surv_prop_5[mm_scut_spruce_no$treatment == "seeded.scarified"]))
-mm_scut_spruce_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_scut_spruce_ex$surv_prop_0[mm_scut_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_ex$surv_prop_1[mm_scut_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_ex$surv_prop_2[mm_scut_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_ex$surv_prop_3[mm_scut_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_ex$surv_prop_4[mm_scut_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_scut_spruce_ex$surv_prop_5[mm_scut_spruce_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_scut_spruce_ex$surv_prop_0[mm_scut_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_ex$surv_prop_1[mm_scut_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_ex$surv_prop_2[mm_scut_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_ex$surv_prop_3[mm_scut_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_ex$surv_prop_4[mm_scut_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_scut_spruce_ex$surv_prop_5[mm_scut_spruce_ex$treatment == "seeded.scarified"]))
-
-
-mm_scut_spruce_no_seed_mod <- lm(log1p(surv) ~ year, mm_scut_spruce_no_seed)
-mm_scut_spruce_no_seed_ci <- data.frame(predict(mm_scut_spruce_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_scut_spruce_no_seed_ci$fit <- exp(mm_scut_spruce_no_seed_ci$fit)-1
-mm_scut_spruce_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_scut_spruce_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_scut_spruce_ex_seed_mod <- lm(log1p(surv) ~ year, mm_scut_spruce_ex_seed)
-mm_scut_spruce_ex_seed_ci <- data.frame(predict(mm_scut_spruce_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_scut_spruce_ex_seed_ci$fit <- exp(mm_scut_spruce_ex_seed_ci$fit)-1
-mm_scut_spruce_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_scut_spruce_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_scut_spruce_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_scut_spruce_no_seedscar)
-mm_scut_spruce_no_seedscar_ci <- data.frame(predict(mm_scut_spruce_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_scut_spruce_no_seedscar_ci$fit <- exp(mm_scut_spruce_no_seedscar_ci$fit)-1
-mm_scut_spruce_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_scut_spruce_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_scut_spruce_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_scut_spruce_ex_seedscar)
-mm_scut_spruce_ex_seedscar_ci <- data.frame(predict(mm_scut_spruce_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_scut_spruce_ex_seedscar_ci$fit <- exp(mm_scut_spruce_ex_seedscar_ci$fit)-1
-mm_scut_spruce_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_scut_spruce_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-## SSHR - spruce
-mm_sshr_spruce_no_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_spruce_no$surv_prop_0[mm_sshr_spruce_no$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_no$surv_prop_1[mm_sshr_spruce_no$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_no$surv_prop_2[mm_sshr_spruce_no$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_no$surv_prop_3[mm_sshr_spruce_no$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_no$surv_prop_4[mm_sshr_spruce_no$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_no$surv_prop_5[mm_sshr_spruce_no$treatment == "seeded"])))),
-                                  surv = c(mm_sshr_spruce_no$surv_prop_0[mm_sshr_spruce_no$treatment == "seeded"],
-                                           mm_sshr_spruce_no$surv_prop_1[mm_sshr_spruce_no$treatment == "seeded"],
-                                           mm_sshr_spruce_no$surv_prop_2[mm_sshr_spruce_no$treatment == "seeded"],
-                                           mm_sshr_spruce_no$surv_prop_3[mm_sshr_spruce_no$treatment == "seeded"],
-                                           mm_sshr_spruce_no$surv_prop_4[mm_sshr_spruce_no$treatment == "seeded"],
-                                           mm_sshr_spruce_no$surv_prop_5[mm_sshr_spruce_no$treatment == "seeded"]))
-mm_sshr_spruce_ex_seed <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_spruce_ex$surv_prop_0[mm_sshr_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_ex$surv_prop_1[mm_sshr_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_ex$surv_prop_2[mm_sshr_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_ex$surv_prop_3[mm_sshr_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_ex$surv_prop_4[mm_sshr_spruce_ex$treatment == "seeded"]),
-                                                           length(mm_sshr_spruce_ex$surv_prop_5[mm_sshr_spruce_ex$treatment == "seeded"])))),
-                                  surv = c(mm_sshr_spruce_ex$surv_prop_0[mm_sshr_spruce_ex$treatment == "seeded"],
-                                           mm_sshr_spruce_ex$surv_prop_1[mm_sshr_spruce_ex$treatment == "seeded"],
-                                           mm_sshr_spruce_ex$surv_prop_2[mm_sshr_spruce_ex$treatment == "seeded"],
-                                           mm_sshr_spruce_ex$surv_prop_3[mm_sshr_spruce_ex$treatment == "seeded"],
-                                           mm_sshr_spruce_ex$surv_prop_4[mm_sshr_spruce_ex$treatment == "seeded"],
-                                           mm_sshr_spruce_ex$surv_prop_5[mm_sshr_spruce_ex$treatment == "seeded"]))
-mm_sshr_spruce_no_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_spruce_no$surv_prop_0[mm_sshr_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_no$surv_prop_1[mm_sshr_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_no$surv_prop_2[mm_sshr_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_no$surv_prop_3[mm_sshr_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_no$surv_prop_4[mm_sshr_spruce_no$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_no$surv_prop_5[mm_sshr_spruce_no$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_sshr_spruce_no$surv_prop_0[mm_sshr_spruce_no$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_no$surv_prop_1[mm_sshr_spruce_no$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_no$surv_prop_2[mm_sshr_spruce_no$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_no$surv_prop_3[mm_sshr_spruce_no$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_no$surv_prop_4[mm_sshr_spruce_no$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_no$surv_prop_5[mm_sshr_spruce_no$treatment == "seeded.scarified"]))
-mm_sshr_spruce_ex_seedscar <- data.frame(year = (rep(c(1:n_yr), c(length(mm_sshr_spruce_ex$surv_prop_0[mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_ex$surv_prop_1[mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_ex$surv_prop_2[mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_ex$surv_prop_3[mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_ex$surv_prop_4[mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
-                                                               length(mm_sshr_spruce_ex$surv_prop_5[mm_sshr_spruce_ex$treatment == "seeded.scarified"])))),
-                                      surv = c(mm_sshr_spruce_ex$surv_prop_0[mm_sshr_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_ex$surv_prop_1[mm_sshr_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_ex$surv_prop_2[mm_sshr_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_ex$surv_prop_3[mm_sshr_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_ex$surv_prop_4[mm_sshr_spruce_ex$treatment == "seeded.scarified"],
-                                               mm_sshr_spruce_ex$surv_prop_5[mm_sshr_spruce_ex$treatment == "seeded.scarified"]))
-
-
-# mm_sshr_spruce_no_seed_mod <- lm(log1p(surv) ~ year, mm_sshr_spruce_no_seed)
-# mm_sshr_spruce_no_seed_ci <- data.frame(predict(mm_sshr_spruce_no_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-# mm_sshr_spruce_no_seed_ci$fit <- exp(mm_sshr_spruce_no_seed_ci$fit)-1
-# mm_sshr_spruce_no_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-#                                        surv_mean = mm_sshr_spruce_no_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_sshr_spruce_ex_seed_mod <- lm(log1p(surv) ~ year, mm_sshr_spruce_ex_seed)
-mm_sshr_spruce_ex_seed_ci <- data.frame(predict(mm_sshr_spruce_ex_seed_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_sshr_spruce_ex_seed_ci$fit <- exp(mm_sshr_spruce_ex_seed_ci$fit)-1
-mm_sshr_spruce_ex_seed_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                       surv_mean = mm_sshr_spruce_ex_seed_ci$fit) #only doing wells with 2015-2020 data
-
-mm_sshr_spruce_no_seedscar_mod <- lm(log1p(surv) ~ year, mm_sshr_spruce_no_seedscar)
-mm_sshr_spruce_no_seedscar_ci <- data.frame(predict(mm_sshr_spruce_no_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_sshr_spruce_no_seedscar_ci$fit <- exp(mm_sshr_spruce_no_seedscar_ci$fit)-1
-mm_sshr_spruce_no_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_sshr_spruce_no_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-mm_sshr_spruce_ex_seedscar_mod <- lm(log1p(surv) ~ year, mm_sshr_spruce_ex_seedscar)
-mm_sshr_spruce_ex_seedscar_ci <- data.frame(predict(mm_sshr_spruce_ex_seedscar_mod, newdata=data.frame(year=seq(1,n_yr,0.1)), interval="confidence", level = 0.95))
-mm_sshr_spruce_ex_seedscar_ci$fit <- exp(mm_sshr_spruce_ex_seedscar_ci$fit)-1
-mm_sshr_spruce_ex_seedscar_mean <- data.frame(year.vals = seq(1,n_yr,0.1),
-                                           surv_mean = mm_sshr_spruce_ex_seedscar_ci$fit) #only doing wells with 2015-2020 data
-
-#______-----
 ## Survival data collation ----
 ## Nalp and Salp fir
-mm_nalp_fir_no %>%
+mm_list$mm_nalp_fir_no %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -818,7 +180,7 @@ mm_nalp_fir_no %>%
                   surv_prop_4 = mean(surv_prop_4, na.rm = T),
                   surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_nalp_fir_ex %>%
+mm_list$mm_nalp_fir_ex %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -827,7 +189,7 @@ mm_nalp_fir_ex %>%
                   surv_prop_4 = mean(surv_prop_4, na.rm = T),
                   surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_salp_fir_no %>%
+mm_list$mm_salp_fir_no %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -836,7 +198,7 @@ mm_salp_fir_no %>%
                   surv_prop_4 = mean(surv_prop_4, na.rm = T),
                   surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_salp_fir_ex %>%
+mm_list$mm_salp_fir_ex %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -852,21 +214,21 @@ par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
 par(mar = c(0.5, 2, 1, 1), oma = c(2.8,1,0,0))
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
-points(jitter(rep(1.05,15)), mm_nalp_fir_no$surv_prop_0[mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(2.05,15)), mm_nalp_fir_no$surv_prop_1[mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(3.05,15)), mm_nalp_fir_no$surv_prop_2[mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(4.05,15)), mm_nalp_fir_no$surv_prop_3[mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(5.05,15)), mm_nalp_fir_no$surv_prop_4[mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(6.05,15)), mm_nalp_fir_no$surv_prop_5[mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-lines(mm_nalp_fir_no_seed_mean$year.vals, mm_nalp_fir_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
+points(jitter(rep(1.05,15)), mm_list$mm_nalp_fir_no$surv_prop_0[mm_list$mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(2.05,15)), mm_list$mm_nalp_fir_no$surv_prop_1[mm_list$mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(3.05,15)), mm_list$mm_nalp_fir_no$surv_prop_2[mm_list$mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(4.05,15)), mm_list$mm_nalp_fir_no$surv_prop_3[mm_list$mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(5.05,15)), mm_list$mm_nalp_fir_no$surv_prop_4[mm_list$mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(6.05,15)), mm_list$mm_nalp_fir_no$surv_prop_5[mm_list$mm_nalp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+lines(mm_list$mm_nalp_fir_no_seed_mean$year.vals, mm_list$mm_nalp_fir_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(0.95,15)), mm_nalp_fir_ex$surv_prop_0[mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_nalp_fir_ex$surv_prop_1[mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_nalp_fir_ex$surv_prop_2[mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_nalp_fir_ex$surv_prop_3[mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_nalp_fir_ex$surv_prop_4[mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_nalp_fir_ex$surv_prop_5[mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_nalp_fir_ex_seed_mean$year.vals, mm_nalp_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_nalp_fir_ex$surv_prop_0[mm_list$mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_nalp_fir_ex$surv_prop_1[mm_list$mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_nalp_fir_ex$surv_prop_2[mm_list$mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_nalp_fir_ex$surv_prop_3[mm_list$mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_nalp_fir_ex$surv_prop_4[mm_list$mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_nalp_fir_ex$surv_prop_5[mm_list$mm_nalp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_nalp_fir_ex_seed_mean$year.vals, mm_list$mm_nalp_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("right", legend = c("Caged","Uncaged"), pch = 21, bty = "n", col = "black", pt.bg = c("blue","red"))
 legend("topright", legend = "a) Seeded", bty = "n")
@@ -875,21 +237,21 @@ axis(side = 1, at = c(1:n_yr), labels = F)
 axis(side = 2)
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
-points(jitter(rep(1.025,15)), mm_nalp_fir_no$surv_prop_0[mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(2.025,15)), mm_nalp_fir_no$surv_prop_1[mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(3.025,15)), mm_nalp_fir_no$surv_prop_2[mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(4.025,15)), mm_nalp_fir_no$surv_prop_3[mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(5.025,15)), mm_nalp_fir_no$surv_prop_4[mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(6.025,15)), mm_nalp_fir_no$surv_prop_5[mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-lines(mm_nalp_fir_no_seedscar_mean$year.vals, mm_nalp_fir_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
+points(jitter(rep(1.025,15)), mm_list$mm_nalp_fir_no$surv_prop_0[mm_list$mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(2.025,15)), mm_list$mm_nalp_fir_no$surv_prop_1[mm_list$mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(3.025,15)), mm_list$mm_nalp_fir_no$surv_prop_2[mm_list$mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(4.025,15)), mm_list$mm_nalp_fir_no$surv_prop_3[mm_list$mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(5.025,15)), mm_list$mm_nalp_fir_no$surv_prop_4[mm_list$mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(6.025,15)), mm_list$mm_nalp_fir_no$surv_prop_5[mm_list$mm_nalp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+lines(mm_list$mm_nalp_fir_no_seedscar_mean$year.vals, mm_list$mm_nalp_fir_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_nalp_fir_ex$surv_prop_0[mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_nalp_fir_ex$surv_prop_1[mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_nalp_fir_ex$surv_prop_2[mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_nalp_fir_ex$surv_prop_3[mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_nalp_fir_ex$surv_prop_4[mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_nalp_fir_ex$surv_prop_5[mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_nalp_fir_ex_seedscar_mean$year.vals, mm_nalp_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_nalp_fir_ex$surv_prop_0[mm_list$mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_nalp_fir_ex$surv_prop_1[mm_list$mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_nalp_fir_ex$surv_prop_2[mm_list$mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_nalp_fir_ex$surv_prop_3[mm_list$mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_nalp_fir_ex$surv_prop_4[mm_list$mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_nalp_fir_ex$surv_prop_5[mm_list$mm_nalp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_nalp_fir_ex_seedscar_mean$year.vals, mm_list$mm_nalp_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "b) Seeded & scarified", bty = "n")
 box()
@@ -897,22 +259,21 @@ axis(side = 1, at = c(1:n_yr), labels = F)
 axis(side = 2)
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
+points(jitter(rep(1.05,15)), mm_list$mm_salp_fir_no$surv_prop_0[mm_list$mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(2.05,15)), mm_list$mm_salp_fir_no$surv_prop_1[mm_list$mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(3.05,15)), mm_list$mm_salp_fir_no$surv_prop_2[mm_list$mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(4.05,15)), mm_list$mm_salp_fir_no$surv_prop_3[mm_list$mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(5.05,15)), mm_list$mm_salp_fir_no$surv_prop_4[mm_list$mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(6.05,15)), mm_list$mm_salp_fir_no$surv_prop_5[mm_list$mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+lines(mm_list$mm_salp_fir_no_mean$year.vals, mm_list$mm_list$mm_salp_fir_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(1.05,15)), mm_salp_fir_no$surv_prop_0[mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(2.05,15)), mm_salp_fir_no$surv_prop_1[mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(3.05,15)), mm_salp_fir_no$surv_prop_2[mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(4.05,15)), mm_salp_fir_no$surv_prop_3[mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(5.05,15)), mm_salp_fir_no$surv_prop_4[mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(6.05,15)), mm_salp_fir_no$surv_prop_5[mm_salp_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-lines(mm_salp_fir_no_seed_mean$year.vals, mm_salp_fir_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
-
-points(jitter(rep(0.95,15)), mm_salp_fir_ex$surv_prop_0[mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_salp_fir_ex$surv_prop_1[mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_salp_fir_ex$surv_prop_2[mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_salp_fir_ex$surv_prop_3[mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_salp_fir_ex$surv_prop_4[mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_salp_fir_ex$surv_prop_5[mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_salp_fir_ex_seed_mean$year.vals, mm_salp_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_salp_fir_ex$surv_prop_0[mm_list$mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_salp_fir_ex$surv_prop_1[mm_list$mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_salp_fir_ex$surv_prop_2[mm_list$mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_salp_fir_ex$surv_prop_3[mm_list$mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_salp_fir_ex$surv_prop_4[mm_list$mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_salp_fir_ex$surv_prop_5[mm_list$mm_salp_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_salp_fir_ex_seed_mean$year.vals, mm_list$mm_salp_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("topright", legend = "c) Seeded", bty = "n")
 box()
@@ -920,21 +281,21 @@ axis(side = 1, at = c(1:n_yr), labels = F)
 axis(side = 2)
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
-points(jitter(rep(1.025,15)), mm_salp_fir_no$surv_prop_0[mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(2.025,15)), mm_salp_fir_no$surv_prop_1[mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(3.025,15)), mm_salp_fir_no$surv_prop_2[mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(4.025,15)), mm_salp_fir_no$surv_prop_3[mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(5.025,15)), mm_salp_fir_no$surv_prop_4[mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(6.025,15)), mm_salp_fir_no$surv_prop_5[mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-lines(mm_salp_fir_no_seedscar_mean$year.vals, mm_salp_fir_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
+points(jitter(rep(1.025,15)), mm_list$mm_salp_fir_no$surv_prop_0[mm_list$mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(2.025,15)), mm_list$mm_salp_fir_no$surv_prop_1[mm_list$mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(3.025,15)), mm_list$mm_salp_fir_no$surv_prop_2[mm_list$mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(4.025,15)), mm_list$mm_salp_fir_no$surv_prop_3[mm_list$mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(5.025,15)), mm_list$mm_salp_fir_no$surv_prop_4[mm_list$mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(6.025,15)), mm_list$mm_salp_fir_no$surv_prop_5[mm_list$mm_salp_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+lines(mm_list$mm_salp_fir_no_mean$year.vals, mm_list$mm_salp_fir_no_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_salp_fir_ex$surv_prop_0[mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_salp_fir_ex$surv_prop_1[mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_salp_fir_ex$surv_prop_2[mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_salp_fir_ex$surv_prop_3[mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_salp_fir_ex$surv_prop_4[mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_salp_fir_ex$surv_prop_5[mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_salp_fir_ex_seedscar_mean$year.vals, mm_salp_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_salp_fir_ex$surv_prop_0[mm_list$mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_salp_fir_ex$surv_prop_1[mm_list$mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_salp_fir_ex$surv_prop_2[mm_list$mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_salp_fir_ex$surv_prop_3[mm_list$mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_salp_fir_ex$surv_prop_4[mm_list$mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_salp_fir_ex$surv_prop_5[mm_list$mm_salp_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_salp_fir_ex_seedscar_mean$year.vals, mm_list$mm_salp_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "d) Seeded & scarified", bty = "n")
 box()
@@ -951,21 +312,21 @@ par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
 par(mar = c(0.5, 2, 1, 1), oma = c(2.8,1,0,0))
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
-points(jitter(rep(1.05,15)), mm_nalp_spruce_no$surv_prop_0[mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(2.05,15)), mm_nalp_spruce_no$surv_prop_1[mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(3.05,15)), mm_nalp_spruce_no$surv_prop_2[mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(4.05,15)), mm_nalp_spruce_no$surv_prop_3[mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(5.05,15)), mm_nalp_spruce_no$surv_prop_4[mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(6.05,15)), mm_nalp_spruce_no$surv_prop_5[mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-lines(mm_nalp_spruce_no_seed_mean$year.vals, mm_nalp_spruce_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
+points(jitter(rep(1.05,15)), mm_list$mm_nalp_spruce_no$surv_prop_0[mm_list$mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(2.05,15)), mm_list$mm_nalp_spruce_no$surv_prop_1[mm_list$mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(3.05,15)), mm_list$mm_nalp_spruce_no$surv_prop_2[mm_list$mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(4.05,15)), mm_list$mm_nalp_spruce_no$surv_prop_3[mm_list$mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(5.05,15)), mm_list$mm_nalp_spruce_no$surv_prop_4[mm_list$mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(6.05,15)), mm_list$mm_nalp_spruce_no$surv_prop_5[mm_list$mm_nalp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+lines(mm_list$mm_nalp_spruce_no_seed_mean$year.vals, mm_list$mm_nalp_spruce_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(0.95,15)), mm_nalp_spruce_ex$surv_prop_0[mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_nalp_spruce_ex$surv_prop_1[mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_nalp_spruce_ex$surv_prop_2[mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_nalp_spruce_ex$surv_prop_3[mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_nalp_spruce_ex$surv_prop_4[mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_nalp_spruce_ex$surv_prop_5[mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_nalp_spruce_ex_seed_mean$year.vals, mm_nalp_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_nalp_spruce_ex$surv_prop_0[mm_list$mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_nalp_spruce_ex$surv_prop_1[mm_list$mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_nalp_spruce_ex$surv_prop_2[mm_list$mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_nalp_spruce_ex$surv_prop_3[mm_list$mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_nalp_spruce_ex$surv_prop_4[mm_list$mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_nalp_spruce_ex$surv_prop_5[mm_list$mm_nalp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_nalp_spruce_ex_seed_mean$year.vals, mm_list$mm_nalp_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("right", legend = c("Caged","Uncaged"), pch = 21, bty = "n", col = "black", pt.bg = c("blue","red"))
 legend("topright", legend = "a) Seeded", bty = "n")
@@ -974,21 +335,21 @@ axis(side = 1, at = c(1:n_yr), labels = F)
 axis(side = 2)
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
-points(jitter(rep(1.025,15)), mm_nalp_spruce_no$surv_prop_0[mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(2.025,15)), mm_nalp_spruce_no$surv_prop_1[mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(3.025,15)), mm_nalp_spruce_no$surv_prop_2[mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(4.025,15)), mm_nalp_spruce_no$surv_prop_3[mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(5.025,15)), mm_nalp_spruce_no$surv_prop_4[mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(6.025,15)), mm_nalp_spruce_no$surv_prop_5[mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-lines(mm_nalp_spruce_no_seedscar_mean$year.vals, mm_nalp_spruce_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
+points(jitter(rep(1.025,15)), mm_list$mm_nalp_spruce_no$surv_prop_0[mm_list$mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(2.025,15)), mm_list$mm_nalp_spruce_no$surv_prop_1[mm_list$mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(3.025,15)), mm_list$mm_nalp_spruce_no$surv_prop_2[mm_list$mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(4.025,15)), mm_list$mm_nalp_spruce_no$surv_prop_3[mm_list$mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(5.025,15)), mm_list$mm_nalp_spruce_no$surv_prop_4[mm_list$mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(6.025,15)), mm_list$mm_nalp_spruce_no$surv_prop_5[mm_list$mm_nalp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+lines(mm_list$mm_nalp_spruce_no_seedscar_mean$year.vals, mm_list$mm_nalp_spruce_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_nalp_spruce_ex$surv_prop_0[mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_nalp_spruce_ex$surv_prop_1[mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_nalp_spruce_ex$surv_prop_2[mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_nalp_spruce_ex$surv_prop_3[mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_nalp_spruce_ex$surv_prop_4[mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_nalp_spruce_ex$surv_prop_5[mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_nalp_spruce_ex_seedscar_mean$year.vals, mm_nalp_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_nalp_spruce_ex$surv_prop_0[mm_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_nalp_spruce_ex$surv_prop_1[mm_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_nalp_spruce_ex$surv_prop_2[mm_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_nalp_spruce_ex$surv_prop_3[mm_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_nalp_spruce_ex$surv_prop_4[mm_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_nalp_spruce_ex$surv_prop_5[mm_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_nalp_spruce_ex_seedscar_mean$year.vals, mm_list$mm_nalp_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "b) Seeded & scarified", bty = "n")
 box()
@@ -996,22 +357,21 @@ axis(side = 1, at = c(1:n_yr), labels = F)
 axis(side = 2)
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
+points(jitter(rep(1.05,15)), mm_list$mm_salp_spruce_no$surv_prop_0[mm_list$mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(2.05,15)), mm_list$mm_salp_spruce_no$surv_prop_1[mm_list$mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(3.05,15)), mm_list$mm_salp_spruce_no$surv_prop_2[mm_list$mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(4.05,15)), mm_list$mm_salp_spruce_no$surv_prop_3[mm_list$mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(5.05,15)), mm_list$mm_salp_spruce_no$surv_prop_4[mm_list$mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+points(jitter(rep(6.05,15)), mm_list$mm_salp_spruce_no$surv_prop_5[mm_list$mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
+lines(mm_list$mm_salp_spruce_no_seed_mean$year.vals, mm_list$mm_salp_spruce_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(1.05,15)), mm_salp_spruce_no$surv_prop_0[mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(2.05,15)), mm_salp_spruce_no$surv_prop_1[mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(3.05,15)), mm_salp_spruce_no$surv_prop_2[mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(4.05,15)), mm_salp_spruce_no$surv_prop_3[mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(5.05,15)), mm_salp_spruce_no$surv_prop_4[mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-points(jitter(rep(6.05,15)), mm_salp_spruce_no$surv_prop_5[mm_salp_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
-lines(mm_salp_spruce_no_seed_mean$year.vals, mm_salp_spruce_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
-
-points(jitter(rep(0.95,15)), mm_salp_spruce_ex$surv_prop_0[mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_salp_spruce_ex$surv_prop_1[mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_salp_spruce_ex$surv_prop_2[mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_salp_spruce_ex$surv_prop_3[mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_salp_spruce_ex$surv_prop_4[mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_salp_spruce_ex$surv_prop_5[mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_salp_spruce_ex_seed_mean$year.vals, mm_salp_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_salp_spruce_ex$surv_prop_0[mm_list$mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_salp_spruce_ex$surv_prop_1[mm_list$mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_salp_spruce_ex$surv_prop_2[mm_list$mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_salp_spruce_ex$surv_prop_3[mm_list$mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_salp_spruce_ex$surv_prop_4[mm_list$mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_salp_spruce_ex$surv_prop_5[mm_list$mm_salp_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_salp_spruce_ex_seed_mean$year.vals, mm_list$mm_salp_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("topright", legend = "c) Seeded", bty = "n")
 box()
@@ -1019,21 +379,21 @@ axis(side = 1, at = c(1:n_yr), labels = F)
 axis(side = 2)
 
 plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
-points(jitter(rep(1.025,15)), mm_salp_spruce_no$surv_prop_0[mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(2.025,15)), mm_salp_spruce_no$surv_prop_1[mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(3.025,15)), mm_salp_spruce_no$surv_prop_2[mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(4.025,15)), mm_salp_spruce_no$surv_prop_3[mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(5.025,15)), mm_salp_spruce_no$surv_prop_4[mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-points(jitter(rep(6.025,15)), mm_salp_spruce_no$surv_prop_5[mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
-lines(mm_salp_spruce_no_seedscar_mean$year.vals, mm_salp_spruce_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
+points(jitter(rep(1.025,15)), mm_list$mm_salp_spruce_no$surv_prop_0[mm_list$mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(2.025,15)), mm_list$mm_salp_spruce_no$surv_prop_1[mm_list$mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(3.025,15)), mm_list$mm_salp_spruce_no$surv_prop_2[mm_list$mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(4.025,15)), mm_list$mm_salp_spruce_no$surv_prop_3[mm_list$mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(5.025,15)), mm_list$mm_salp_spruce_no$surv_prop_4[mm_list$mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+points(jitter(rep(6.025,15)), mm_list$mm_salp_spruce_no$surv_prop_5[mm_list$mm_salp_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
+lines(mm_list$mm_salp_spruce_no_seedscar_mean$year.vals, mm_list$mm_salp_spruce_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_salp_spruce_ex$surv_prop_0[mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_salp_spruce_ex$surv_prop_1[mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_salp_spruce_ex$surv_prop_2[mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_salp_spruce_ex$surv_prop_3[mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_salp_spruce_ex$surv_prop_4[mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_salp_spruce_ex$surv_prop_5[mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_salp_spruce_ex_seedscar_mean$year.vals, mm_salp_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_salp_spruce_ex$surv_prop_0[mm_list$mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_salp_spruce_ex$surv_prop_1[mm_list$mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_salp_spruce_ex$surv_prop_2[mm_list$mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_salp_spruce_ex$surv_prop_3[mm_list$mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_salp_spruce_ex$surv_prop_4[mm_list$mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_salp_spruce_ex$surv_prop_5[mm_list$mm_salp_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_salp_spruce_ex_seedscar_mean$year.vals, mm_list$mm_salp_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "d) Seeded & scarified", bty = "n")
 box()
@@ -1044,7 +404,7 @@ mtext("Survival proportion", side = 2, outer = T)
 dev.off()
 
 ## Nalp and Salp spruce
-mm_nalp_spruce_no %>%
+mm_list$mm_nalp_spruce_no %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1053,7 +413,7 @@ mm_nalp_spruce_no %>%
             surv_prop_4 = mean(surv_prop_4, na.rm = T),
             surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_nalp_spruce_ex %>%
+mm_list$mm_nalp_spruce_ex %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1062,7 +422,7 @@ mm_nalp_spruce_ex %>%
             surv_prop_4 = mean(surv_prop_4, na.rm = T),
             surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_salp_spruce_no %>%
+mm_list$mm_salp_spruce_no %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1071,7 +431,7 @@ mm_salp_spruce_no %>%
             surv_prop_4 = mean(surv_prop_4, na.rm = T),
             surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_salp_spruce_ex %>%
+mm_list$mm_salp_spruce_ex %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1082,7 +442,7 @@ mm_salp_spruce_ex %>%
 
 
 ## SCUT and SSHR fir
-mm_scut_fir_no %>%
+mm_list$mm_scut_fir_no %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1091,7 +451,7 @@ mm_scut_fir_no %>%
                   surv_prop_4 = mean(surv_prop_4, na.rm = T),
                   surv_prop_5 = mean(surv_prop_4, na.rm = T))
 
-mm_scut_fir_ex %>%
+mm_list$mm_scut_fir_ex %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1100,7 +460,7 @@ mm_scut_fir_ex %>%
                   surv_prop_4 = mean(surv_prop_4, na.rm = T),
                   surv_prop_5 = mean(surv_prop_4, na.rm = T))
 
-mm_sshr_fir_no %>%
+mm_list$mm_sshr_fir_no %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1109,7 +469,7 @@ mm_sshr_fir_no %>%
                   surv_prop_4 = mean(surv_prop_4, na.rm = T),
                   surv_prop_5 = mean(surv_prop_4, na.rm = T))
 
-mm_sshr_fir_ex %>%
+mm_list$mm_sshr_fir_ex %>%
         group_by(treatment) %>%
         summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
                   surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1131,13 +491,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.05,15)), mm_scut_fir_no$surv_prop_4[mm_scut_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
 # lines(mm_scut_fir_no_seed_mean$year.vals, mm_scut_fir_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(0.95,15)), mm_scut_fir_ex$surv_prop_0[mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_scut_fir_ex$surv_prop_1[mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_scut_fir_ex$surv_prop_2[mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_scut_fir_ex$surv_prop_3[mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_scut_fir_ex$surv_prop_4[mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_scut_fir_ex$surv_prop_5[mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_scut_fir_ex_seed_mean$year.vals, mm_scut_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_scut_fir_ex$surv_prop_0[mm_list$mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_scut_fir_ex$surv_prop_1[mm_list$mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_scut_fir_ex$surv_prop_2[mm_list$mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_scut_fir_ex$surv_prop_3[mm_list$mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_scut_fir_ex$surv_prop_4[mm_list$mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_scut_fir_ex$surv_prop_5[mm_list$mm_scut_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_scut_fir_ex_seed_mean$year.vals, mm_list$mm_scut_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("top", legend = c("Caged","Uncaged"), pch = 21, bty = "n", col = "black", pt.bg = c("blue","red"))
 legend("topright", legend = "a) Seeded", bty = "n")
@@ -1153,13 +513,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.025,15)), mm_scut_fir_no$surv_prop_4[mm_scut_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
 # lines(mm_scut_fir_no_seedscar_mean$year.vals, mm_scut_fir_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_scut_fir_ex$surv_prop_0[mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_scut_fir_ex$surv_prop_1[mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_scut_fir_ex$surv_prop_2[mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_scut_fir_ex$surv_prop_3[mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_scut_fir_ex$surv_prop_4[mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_scut_fir_ex$surv_prop_5[mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_scut_fir_ex_seedscar_mean$year.vals, mm_scut_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_scut_fir_ex$surv_prop_0[mm_list$mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_scut_fir_ex$surv_prop_1[mm_list$mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_scut_fir_ex$surv_prop_2[mm_list$mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_scut_fir_ex$surv_prop_3[mm_list$mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_scut_fir_ex$surv_prop_4[mm_list$mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_scut_fir_ex$surv_prop_5[mm_list$mm_scut_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_scut_fir_ex_seedscar_mean$year.vals, mm_list$mm_scut_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "b) Seeded & scarified", bty = "n")
 box()
@@ -1174,13 +534,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.05,15)), mm_sshr_fir_no$surv_prop_4[mm_sshr_fir_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
 # lines(mm_sshr_fir_no_seed_mean$year.vals, mm_sshr_fir_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(0.95,15)), mm_sshr_fir_ex$surv_prop_0[mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_sshr_fir_ex$surv_prop_1[mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_sshr_fir_ex$surv_prop_2[mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_sshr_fir_ex$surv_prop_3[mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_sshr_fir_ex$surv_prop_4[mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_sshr_fir_ex$surv_prop_5[mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_sshr_fir_ex_seed_mean$year.vals, mm_sshr_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_sshr_fir_ex$surv_prop_0[mm_list$mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_sshr_fir_ex$surv_prop_1[mm_list$mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_sshr_fir_ex$surv_prop_2[mm_list$mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_sshr_fir_ex$surv_prop_3[mm_list$mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_sshr_fir_ex$surv_prop_4[mm_list$mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_sshr_fir_ex$surv_prop_5[mm_list$mm_sshr_fir_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_sshr_fir_ex_seed_mean$year.vals, mm_list$mm_sshr_fir_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("topright", legend = "c) Seeded", bty = "n")
 box()
@@ -1195,13 +555,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.025,15)), mm_sshr_fir_no$surv_prop_4[mm_sshr_fir_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
 # lines(mm_sshr_fir_no_seedscar_mean$year.vals, mm_sshr_fir_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_sshr_fir_ex$surv_prop_0[mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_sshr_fir_ex$surv_prop_1[mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_sshr_fir_ex$surv_prop_2[mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_sshr_fir_ex$surv_prop_3[mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_sshr_fir_ex$surv_prop_4[mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_sshr_fir_ex$surv_prop_5[mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_sshr_fir_ex_seedscar_mean$year.vals, mm_sshr_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_sshr_fir_ex$surv_prop_0[mm_list$mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_sshr_fir_ex$surv_prop_1[mm_list$mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_sshr_fir_ex$surv_prop_2[mm_list$mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_sshr_fir_ex$surv_prop_3[mm_list$mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_sshr_fir_ex$surv_prop_4[mm_list$mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_sshr_fir_ex$surv_prop_5[mm_list$mm_sshr_fir_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_sshr_fir_ex_seedscar_mean$year.vals, mm_list$mm_sshr_fir_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "d) Seeded & scarified", bty = "n")
 box()
@@ -1212,7 +572,7 @@ mtext("Survival proportion", side = 2, outer = T)
 dev.off()
 
 ## SCUT and SSHR spruce
-mm_scut_spruce_no %>%
+mm_list$mm_scut_spruce_no %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1221,7 +581,7 @@ mm_scut_spruce_no %>%
             surv_prop_4 = mean(surv_prop_4, na.rm = T),
             surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_scut_spruce_ex %>%
+mm_list$mm_scut_spruce_ex %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1230,7 +590,7 @@ mm_scut_spruce_ex %>%
             surv_prop_4 = mean(surv_prop_4, na.rm = T),
             surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_sshr_spruce_no %>%
+mm_list$mm_sshr_spruce_no %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1239,7 +599,7 @@ mm_sshr_spruce_no %>%
             surv_prop_4 = mean(surv_prop_4, na.rm = T),
             surv_prop_5 = mean(surv_prop_5, na.rm = T))
 
-mm_sshr_spruce_ex %>%
+mm_list$mm_sshr_spruce_ex %>%
   group_by(treatment) %>%
   summarise(surv_prop_0 = mean(surv_prop_0, na.rm = T),
             surv_prop_1 = mean(surv_prop_1, na.rm = T),
@@ -1261,13 +621,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.05,15)), mm_scut_spruce_no$surv_prop_4[mm_scut_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
 # lines(mm_scut_spruce_no_seed_mean$year.vals, mm_scut_spruce_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(0.95,15)), mm_scut_spruce_ex$surv_prop_0[mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_scut_spruce_ex$surv_prop_1[mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_scut_spruce_ex$surv_prop_2[mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_scut_spruce_ex$surv_prop_3[mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_scut_spruce_ex$surv_prop_4[mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_scut_spruce_ex$surv_prop_5[mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_scut_spruce_ex_seed_mean$year.vals, mm_scut_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_scut_spruce_ex$surv_prop_0[mm_list$mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_scut_spruce_ex$surv_prop_1[mm_list$mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_scut_spruce_ex$surv_prop_2[mm_list$mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_scut_spruce_ex$surv_prop_3[mm_list$mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_scut_spruce_ex$surv_prop_4[mm_list$mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_scut_spruce_ex$surv_prop_5[mm_list$mm_scut_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_scut_spruce_ex_seed_mean$year.vals, mm_list$mm_scut_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("top", legend = c("Caged","Uncaged"), pch = 21, bty = "n", col = "black", pt.bg = c("blue","red"))
 legend("topright", legend = "a) Seeded", bty = "n")
@@ -1283,13 +643,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.025,15)), mm_scut_spruce_no$surv_prop_4[mm_scut_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
 # lines(mm_scut_spruce_no_seedscar_mean$year.vals, mm_scut_spruce_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_scut_spruce_ex$surv_prop_0[mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_scut_spruce_ex$surv_prop_1[mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_scut_spruce_ex$surv_prop_2[mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_scut_spruce_ex$surv_prop_3[mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_scut_spruce_ex$surv_prop_4[mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_scut_spruce_ex$surv_prop_5[mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_scut_spruce_ex_seedscar_mean$year.vals, mm_scut_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_scut_spruce_ex$surv_prop_0[mm_list$mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_scut_spruce_ex$surv_prop_1[mm_list$mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_scut_spruce_ex$surv_prop_2[mm_list$mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_scut_spruce_ex$surv_prop_3[mm_list$mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_scut_spruce_ex$surv_prop_4[mm_list$mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_scut_spruce_ex$surv_prop_5[mm_list$mm_scut_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_scut_spruce_ex_seedscar_mean$year.vals, mm_list$mm_scut_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "b) Seeded & scarified", bty = "n")
 box()
@@ -1304,13 +664,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.05,15)), mm_sshr_spruce_no$surv_prop_4[mm_sshr_spruce_no$treatment == "seeded"], bg = "red", pch = 21, cex = 0.75)
 # lines(mm_sshr_spruce_no_seed_mean$year.vals, mm_sshr_spruce_no_seed_mean$surv, lwd = 2, lty = 3, col = "red")
 
-points(jitter(rep(0.95,15)), mm_sshr_spruce_ex$surv_prop_0[mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(1.95,15)), mm_sshr_spruce_ex$surv_prop_1[mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(2.95,15)), mm_sshr_spruce_ex$surv_prop_2[mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(3.95,15)), mm_sshr_spruce_ex$surv_prop_3[mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(4.95,15)), mm_sshr_spruce_ex$surv_prop_4[mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-points(jitter(rep(5.95,15)), mm_sshr_spruce_ex$surv_prop_5[mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
-lines(mm_sshr_spruce_ex_seed_mean$year.vals, mm_sshr_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
+points(jitter(rep(0.95,15)), mm_list$mm_sshr_spruce_ex$surv_prop_0[mm_list$mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(1.95,15)), mm_list$mm_sshr_spruce_ex$surv_prop_1[mm_list$mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(2.95,15)), mm_list$mm_sshr_spruce_ex$surv_prop_2[mm_list$mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(3.95,15)), mm_list$mm_sshr_spruce_ex$surv_prop_3[mm_list$mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(4.95,15)), mm_list$mm_sshr_spruce_ex$surv_prop_4[mm_list$mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+points(jitter(rep(5.95,15)), mm_list$mm_sshr_spruce_ex$surv_prop_5[mm_list$mm_sshr_spruce_ex$treatment == "seeded"], bg = "blue", pch = 21, cex = 0.75)
+lines(mm_list$mm_sshr_spruce_ex_seed_mean$year.vals, mm_list$mm_sshr_spruce_ex_seed_mean$surv, lwd = 2, lty = 3, col = "blue")
 
 legend("topright", legend = "c) Seeded", bty = "n")
 box()
@@ -1325,13 +685,13 @@ plot(1, type="n", xlab="", ylab="", axes = F, xlim=c(0.85,5.15), ylim=c(0,1))
 # points(jitter(rep(5.025,15)), mm_sshr_spruce_no$surv_prop_4[mm_sshr_spruce_no$treatment == "seeded.scarified"], bg = "red", pch = 24, cex = 0.75)
 # lines(mm_sshr_spruce_no_seedscar_mean$year.vals, mm_sshr_spruce_no_seedscar_mean$surv, lwd = 2, lty = 1, col = "red")
 
-points(jitter(rep(0.975,15)), mm_sshr_spruce_ex$surv_prop_0[mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(1.975,15)), mm_sshr_spruce_ex$surv_prop_1[mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(2.975,15)), mm_sshr_spruce_ex$surv_prop_2[mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(3.975,15)), mm_sshr_spruce_ex$surv_prop_3[mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(4.975,15)), mm_sshr_spruce_ex$surv_prop_4[mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-points(jitter(rep(5.975,15)), mm_sshr_spruce_ex$surv_prop_5[mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
-lines(mm_sshr_spruce_ex_seedscar_mean$year.vals, mm_sshr_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
+points(jitter(rep(0.975,15)), mm_list$mm_sshr_spruce_ex$surv_prop_0[mm_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(1.975,15)), mm_list$mm_sshr_spruce_ex$surv_prop_1[mm_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(2.975,15)), mm_list$mm_sshr_spruce_ex$surv_prop_2[mm_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(3.975,15)), mm_list$mm_sshr_spruce_ex$surv_prop_3[mm_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(4.975,15)), mm_list$mm_sshr_spruce_ex$surv_prop_4[mm_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+points(jitter(rep(5.975,15)), mm_list$mm_sshr_spruce_ex$surv_prop_5[mm_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"], bg = "blue", pch = 24, cex = 0.75)
+lines(mm_list$mm_sshr_spruce_ex_seedscar_mean$year.vals, mm_list$mm_sshr_spruce_ex_seedscar_mean$surv, lwd = 2, lty = 1, col = "blue")
 
 legend("topright", legend = "d) Seeded & scarified", bty = "n")
 box()
@@ -1340,135 +700,6 @@ axis(side = 2)
 mtext("Year post germination", side = 1, outer = T, line = 1.5)
 mtext("Survival proportion", side = 2, outer = T)
 dev.off()
-
-##***************
-## Models (need to be updated: 2021-08-27)
-f1 <- formula(germ_prop_via_int ~ treat * sow_year + exclosure | treat * sow_year + exclosure)
-f1A <- formula(germ_prop_via_int ~ treat * exclosure | treat * exclosure)
-f1B <- formula(germ_prop_via_int ~ treat + exclosure | treat + exclosure)
-f1C <- formula(germ_prop_via_int ~ treat | treat)
-
-## Fir
-# Nalp ZINBs
-nalp_fir_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_nalp_fir_seed)
-nalp_fir_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_nalp_fir_seed)
-nalp_fir_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_nalp_fir_seed)
-nalp_fir_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_nalp_fir_seed)
-nalp_fir_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_nalp_fir_seed)
-lrtest(nalp_fir_Zip1,nalp_fir_Nb1) # nb model is better than Poisson
-lrtest(nalp_fir_Nb1,nalp_fir_Nb1A) # no diff
-lrtest(nalp_fir_Nb1,nalp_fir_Nb1B) # no diff
-lrtest(nalp_fir_Nb1,nalp_fir_Nb1C) # no diff
-AIC(nalp_fir_Nb1,nalp_fir_Nb1A,nalp_fir_Nb1B,nalp_fir_Nb1C) # Model C has lowest AIC
-summary(nalp_fir_Nb1A)
-summary(nalp_fir_Nb1B)
-summary(nalp_fir_Nb1C) # Treatment is significant (P = 0.00692)
-
-# Salp ZINBs
-salp_fir_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_salp_fir_seed)
-salp_fir_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_salp_fir_seed)
-salp_fir_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_salp_fir_seed)
-salp_fir_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_salp_fir_seed)
-salp_fir_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_salp_fir_seed)
-lrtest(salp_fir_Zip1,salp_fir_Nb1) # nb model is better
-lrtest(salp_fir_Nb1,salp_fir_Nb1A) # A is better than the full
-lrtest(salp_fir_Nb1,salp_fir_Nb1B) # B is better than the full
-lrtest(salp_fir_Nb1,salp_fir_Nb1C) # C is better than the full
-AIC(salp_fir_Nb1,salp_fir_Nb1A,salp_fir_Nb1B,salp_fir_Nb1C) # Model C has lowest AIC
-summary(salp_fir_Nb1)
-summary(salp_fir_Nb1A)
-summary(salp_fir_Nb1B)
-summary(salp_fir_Nb1C) # Treatment is significant (P = 0.00037)
-
-# Scut ZINBs
-scut_fir_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_scut_fir_seed) # Computationally singular
-scut_fir_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_scut_fir_seed)
-scut_fir_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_scut_fir_seed) # Computationally singular
-scut_fir_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_scut_fir_seed)
-scut_fir_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_scut_fir_seed)
-lrtest(scut_fir_Zip1,scut_fir_Nb1)
-lrtest(scut_fir_Nb1,scut_fir_Nb1A)
-lrtest(scut_fir_Nb1,scut_fir_Nb1B)
-lrtest(scut_fir_Nb1,scut_fir_Nb1C)
-AIC(scut_fir_Nb1,scut_fir_Nb1B,scut_fir_Nb1C) # Model B has lowest AIC
-summary(scut_fir_Nb1)
-summary(scut_fir_Nb1B) # Treatment (P = 0.00073) and exclosure (P = 0.00073) are significant
-summary(scut_fir_Nb1C)
-
-# Sshr ZINBs
-sshr_fir_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_sshr_fir_seed) # Computationally singular
-sshr_fir_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_sshr_fir_seed)   # Computationally singular
-sshr_fir_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_sshr_fir_seed) # Computationally singular
-sshr_fir_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_sshr_fir_seed) # Computationally singular
-sshr_fir_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_sshr_fir_seed) # Computationally singular
-AIC(sshr_fir_Nb1C)
-summary(sshr_fir_Nb1C) # Treatment is significant (P = 3.27e-05)
-
-
-## Spruce
-# Nalp ZINBs
-nalp_spruce_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_nalp_spruce_seed)
-nalp_spruce_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_nalp_spruce_seed)
-nalp_spruce_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_nalp_spruce_seed)
-nalp_spruce_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_nalp_spruce_seed)
-nalp_spruce_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_nalp_spruce_seed)
-lrtest(nalp_spruce_Zip1,nalp_spruce_Nb1) # nb model is better than Poisson
-lrtest(nalp_spruce_Nb1,nalp_spruce_Nb1A) # no diff
-lrtest(nalp_spruce_Nb1,nalp_spruce_Nb1B) # no diff
-lrtest(nalp_spruce_Nb1,nalp_spruce_Nb1C) # no diff
-AIC(nalp_spruce_Nb1,nalp_spruce_Nb1A,nalp_spruce_Nb1B,nalp_spruce_Nb1C) # Model C has lowest AIC
-summary(nalp_spruce_Nb1)
-summary(nalp_spruce_Nb1A)
-summary(nalp_spruce_Nb1B)
-summary(nalp_spruce_Nb1C) # Treatment is ~significant (P = 0.0569)
-
-# Salp ZINBs
-salp_spruce_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_salp_spruce_seed)
-salp_spruce_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_salp_spruce_seed) # Computationally singular
-salp_spruce_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_salp_spruce_seed)
-salp_spruce_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_salp_spruce_seed)
-salp_spruce_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_salp_spruce_seed)
-# lrtest(salp_spruce_Zip1,salp_spruce_Nb1) # nb model is better
-# lrtest(salp_spruce_Nb1,salp_spruce_Nb1A) # no diff
-# lrtest(salp_spruce_Nb1,salp_spruce_Nb1B) # no diff
-# lrtest(salp_spruce_Nb1,salp_spruce_Nb1C) # no diff
-AIC(salp_spruce_Nb1A,salp_spruce_Nb1B,salp_spruce_Nb1C) # Model B has lowest AIC
-# summary(salp_spruce_Nb1)
-summary(salp_spruce_Nb1A)
-summary(salp_spruce_Nb1B) # Treatment (P = 0.0174) and exclosure (P = 3.67e-05) are significant
-summary(salp_spruce_Nb1C)
-
-# Scut ZINBs
-scut_spruce_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_scut_spruce_seed) # Computationally singular
-scut_spruce_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_scut_spruce_seed) # Computationally singular
-scut_spruce_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_scut_spruce_seed)  # Computationally singular
-scut_spruce_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_scut_spruce_seed)
-scut_spruce_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_scut_spruce_seed)
-# lrtest(scut_spruce_Zip1,scut_spruce_Nb1) # nb model is better
-# lrtest(scut_spruce_Nb1,scut_spruce_Nb1A) # no diff
-# lrtest(scut_spruce_Nb1,scut_spruce_Nb1B) # no diff
-# lrtest(scut_spruce_Nb1,scut_spruce_Nb1C) # no diff
-AIC(scut_spruce_Nb1B,scut_spruce_Nb1C) # Model B has lowest AIC
-# summary(scut_spruce_Nb1)
-# summary(scut_spruce_Nb1A)
-summary(scut_spruce_Nb1B) # Treatment (P  = 7.79e-05) and exclosure (P = 7.79e-05) are significant
-summary(scut_spruce_Nb1C)
-
-# Sshr ZINBs
-sshr_spruce_Zip1 <- zeroinfl(f1, dist = "poisson", link = "logit", data = mm_sshr_spruce_seed)
-sshr_spruce_Nb1 <- zeroinfl(f1, dist = "negbin", link = "logit", data = mm_sshr_spruce_seed)  
-sshr_spruce_Nb1A <- zeroinfl(f1A, dist = "negbin", link = "logit", data = mm_sshr_spruce_seed)
-sshr_spruce_Nb1B <- zeroinfl(f1B, dist = "negbin", link = "logit", data = mm_sshr_spruce_seed)
-sshr_spruce_Nb1C <- zeroinfl(f1C, dist = "negbin", link = "logit", data = mm_sshr_spruce_seed)
-lrtest(sshr_spruce_Zip1,sshr_spruce_Nb1) # nb model is better
-lrtest(sshr_spruce_Nb1,sshr_spruce_Nb1A) # no diff
-lrtest(sshr_spruce_Nb1,sshr_spruce_Nb1B) # no diff
-lrtest(sshr_spruce_Nb1,sshr_spruce_Nb1C) # C is better than full
-AIC(sshr_spruce_Nb1, sshr_spruce_Nb1A, sshr_spruce_Nb1B, sshr_spruce_Nb1C) # Model B has lowest AIC
-summary(sshr_spruce_Nb1)
-summary(sshr_spruce_Nb1A)
-summary(sshr_spruce_Nb1B) # Exclosure is significant (P = 0.000147)
-summary(sshr_spruce_Nb1C)
 
 #_______________________________----
 # Microclimate ----
