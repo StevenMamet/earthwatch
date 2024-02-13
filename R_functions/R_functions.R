@@ -1,4 +1,76 @@
-# GTREE ----
+#__________________________________________----
+# Function to move files to another folder (trail cam pic wrangling)
+
+# Function to copy all files
+my_function <- function(x) {
+  file.copy(
+    from = file.path(input_path, x) ,
+    to = file.path(output_path, x) ,
+    copy.date = TRUE
+  ) # Retain the modified dates for each file
+}
+
+#__________________________________________----
+# Moving trail cam pics based on removing repeat dates
+
+move_pics_date_only <- function(input_path) {
+  setwd(input_path)
+  
+  # Create new directory to copy images to
+  output_path <- paste(input_path, "testing", sep = "/")
+  
+  if (file.exists(output_path)) {
+    setwd(output_path)
+    
+  } else {
+    dir.create(output_path)    # create directories
+    
+  }
+  
+  # Collect the paths and file list
+  collector <- list.files(getwd(),
+                          full.names = T, # capture the file names along with the full path
+                          recursive = T)  # look in subfolders
+  
+  temp_df <- file.info(collector)$mtime
+  collector <- collector[which(!duplicated(as_date(file.info(collector)$mtime)))]
+  file_list <- gsub(input_path, "", collector)
+  
+  # Copy the files
+  lapply(file_list, my_function)
+  
+}
+
+#__________________________________________----
+# Move trail can pics based on modified time and removing duplicate dates
+
+move_pics <- function(input_path, time_unit) {
+  setwd(input_path)
+  
+  # Create new directory to copy images to
+  output_path <- paste(input_path, "testing", sep = "/")
+  
+  if (file.exists(output_path)) {
+    setwd(output_path)
+    
+  } else {
+    dir.create(output_path)    # create directories
+    
+  }
+  
+  # Create df containing the modified times for each file and use to create file index
+  temp_df <- file.info(collector)$mtime
+  collect_list <- collector[which(grepl(time_unit, temp_df))]
+  collect_list <- collect_list[which(!duplicated(file.info(collect_list)$mtime))]
+  collect_list <- collect_list[which(!duplicated(as_date(file.info(collect_list)$mtime)))]
+  file_list <- gsub(input_path, "", collect_list)
+  
+  # Copy the files
+  lapply(file_list, my_function)
+  
+}
+
+#__________________________________________----
 # Wrangling all the GTREE data for the various figures
 gtree_fun <- function(df, n_yr) {
   df_list <- list()
@@ -1353,7 +1425,7 @@ gtree_fun <- function(df, n_yr) {
 }
 
 
-# Zero-inflated modeling (archived) ----
+# Zero-inflated modeling (archived)
 
 # ##***************
 # ## Models (need to be updated: 2021-08-27)
