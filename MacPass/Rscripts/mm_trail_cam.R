@@ -1,10 +1,16 @@
 # devtools::install_github("kaitlynstrickfaden/edger", build_vignettes = TRUE, force = TRUE)
+# devtools::install_github("asgr/imager")
+# Note that I had numerous issues where I would get an X11 error.
+# To remedy this, I had to run the following in terminal:
+# brew install xquartz --cask
 
 library(edger)
 library(imager)
 library(tidyverse)
 library(lubridate)
 library(zoo) # Interpolating snow data
+library(grDevices)
+capabilities()
 
 rm(list = ls())
 
