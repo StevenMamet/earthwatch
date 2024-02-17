@@ -43,6 +43,15 @@ df <- snow %>%
   ungroup() %>% 
   rename(year = date)
 
+df %>% 
+  select(site, year, depth_mean, density_mean, swe_mean, htc_mean) %>% 
+  group_by(site) %>% 
+  mutate(depth_rank = rank(depth_mean),
+         density_rank = rank(density_mean),
+         swe_rank = rank(swe_mean),
+         htc_rank = rank(htc_mean)) %>% 
+  filter(year == 2024)
+
 # Subset the data by site ----
 # Tree island
 tis <- subset(df, site == "TIS")
@@ -64,40 +73,40 @@ tun <- subset(df, site == "TUN")
 ## Linear models to determine if there are significant trends through time.
 ## Any significant trends will be plotted on the corresponding figure.
 # Depth
-df %>%
+depth_lm <- df %>%
   nest(data = -site) %>%
   mutate(fit = map(data, ~ lm(depth_mean ~ year, data = .x)),
          tidied = map(fit, tidy)) %>%
-  unnest(tidied) %>%
-  filter(term == "year", p.value <= 0.05)
+  unnest(tidied)# %>%
+  # filter(term == "year", p.value <= 0.05)
 # SIG: BWP
 
 # Density
-df %>%
+density_lm <- df %>%
   nest(data = -site) %>%
   mutate(fit = map(data, ~ lm(density_mean ~ year, data = .x)),
          tidied = map(fit, tidy)) %>%
-  unnest(tidied) %>%
-  filter(term == "year", p.value <= 0.05)
+  unnest(tidied) #%>%
+  # filter(term == "year", p.value <= 0.05)
 # SIG: AIR, BFR, BWP, TUN
 
 # SWE
-df %>%
+swe_lm <- df %>%
   nest(data = -site) %>%
   mutate(fit = map(data, ~ lm(swe_mean ~ year, data = .x)),
          tidied = map(fit, tidy)) %>%
-  unnest(tidied) %>%
-  filter(term == "year", p.value <= 0.05)
+  unnest(tidied)# %>%
+  # filter(term == "year", p.value <= 0.05)
 # SIG: AIR, BWP
 
 # HTC
-df %>%
+htc_lm <- df %>%
   nest(data = -site) %>%
   mutate(fit = map(data, ~ lm(htc_mean ~ year, data = .x)),
          tidied = map(fit, tidy)) %>%
-  unnest(tidied) %>%
-  filter(term == "year", p.value <= 0.05)
-# SIG: BWP, PFR, PPA, TIS
+  unnest(tidied)# %>%
+  # filter(term == "year", p.value <= 0.05)
+# SIG: BWP, PFR, PPA
 
 #_____________________________----
 
@@ -144,7 +153,10 @@ plot(bwp$year, bwp$depth_mean, type="n", xlim = c(2000,year), ylim = c(0,100),
 polygon(c(bwp$year, rev(bwp$year)), c(bwp$depth_c95, rev(bwp$depth_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(bwp$year, bwp$depth_mean, lwd=2, col = alpha("green4",0.6))
 # abline(coef(bwp_depth), lty = 2, col = alpha("green4"))
-abline(coef(bwp_depth), col = alpha("green4",0.5), lty = 3, lwd = 2)
+# abline(coef(bwp_depth), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (depth_lm$estimate[depth_lm$site == "BWP" & depth_lm$term == "(Intercept)"]),
+       b = (depth_lm$estimate[depth_lm$site == "BWP" & depth_lm$term == "year"]), 
+       col = alpha("green4",0.5), lty = 3, lwd = 2)
 # PFR
 polygon(c(pfr$year, rev(pfr$year)), c(pfr$depth_c95, rev(pfr$depth_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(pfr$year, pfr$depth_mean, lwd=2, col = alpha("deepskyblue1",0.6))
@@ -204,7 +216,9 @@ plot(air$year, air$density_mean, type="n", xlim = c(2000,year), ylim = c(100,500
 # AIR
 polygon(c(air$year, rev(air$year)), c(air$density_c95, rev(air$density_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(air$year, air$density_mean, lwd=2, col = alpha("green4",0.6))
-abline(coef(air_density), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (density_lm$estimate[density_lm$site == "AIR" & density_lm$term == "(Intercept)"]),
+       b = (density_lm$estimate[density_lm$site == "AIR" & density_lm$term == "year"]), 
+       col = alpha("green4",0.5), lty = 3, lwd = 2)
 # BSW
 polygon(c(bsw$year, rev(bsw$year)), c(bsw$density_c95, rev(bsw$density_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(bsw$year, bsw$density_mean, lwd=2, col = alpha("deepskyblue1",0.6))
@@ -224,14 +238,16 @@ plot(bwp$year, bwp$density_mean, type="n", xlim = c(2000,year), ylim = c(100,500
 # BWP
 polygon(c(bwp$year, rev(bwp$year)), c(bwp$density_c95, rev(bwp$density_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(bwp$year, bwp$density_mean, lwd=2, col = alpha("green4",0.6))
-abline(coef(bwp_density), col = alpha("green4",0.5), lty = 3, lwd = 2)
+# abline(coef(bwp_density), col = alpha("green4",0.5), lty = 3, lwd = 2)
 # PFR
 polygon(c(pfr$year, rev(pfr$year)), c(pfr$density_c95, rev(pfr$density_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(pfr$year, pfr$density_mean, lwd=2, col = alpha("deepskyblue1",0.6))
 # BFR
 polygon(c(bfr$year, rev(bfr$year)), c(bfr$density_c95, rev(bfr$density_c5)), col = alpha("darksalmon",0.5), border = NA)
 lines(bfr$year, bfr$density_mean, lwd=2, col = alpha("darkorange3",0.6))
-abline(coef(bfr_density), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (density_lm$estimate[density_lm$site == "BFR" & density_lm$term == "(Intercept)"]),
+       b = (density_lm$estimate[density_lm$site == "BFR" & density_lm$term == "year"]), 
+       col = alpha("darkorange3",0.5), lty = 3, lwd = 2)
 box()
 axis(side = 1, at = seq(2000,year,2), labels = NA)
 axis(side = 2, at = seq(0,500,100))
@@ -251,7 +267,9 @@ lines(ppa$year, ppa$density_mean, lwd=2, col = alpha("darkorange3",0.6))
 # TUN
 polygon(c(tun$year, rev(tun$year)), c(tun$density_c95, rev(tun$density_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(tun$year, tun$density_mean, lwd=2, col = alpha("green4",0.6))
-# abline(coef(lm(tun[,4] ~ tun$year)), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (density_lm$estimate[density_lm$site == "TUN" & density_lm$term == "(Intercept)"]),
+       b = (density_lm$estimate[density_lm$site == "TUN" & density_lm$term == "year"]), 
+       col = alpha("green4",0.5), lty = 3, lwd = 2)
 # FEN
 polygon(c(fen$year, rev(fen$year)), c(fen$density_c95, rev(fen$density_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(fen$year, fen$density_mean, lwd=2, col = alpha("deepskyblue1",0.6))
@@ -286,7 +304,9 @@ plot(air$year, air$swe_mean, type="n", xlim = c(2000,year), ylim = c(0,200),
 # AIR
 polygon(c(air$year, rev(air$year)), c(air$swe_c95, rev(air$swe_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(air$year, air$swe_mean, lwd=2, col = alpha("green4",0.6))
-abline(coef(air_swe), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (swe_lm$estimate[swe_lm$site == "AIR" & swe_lm$term == "(Intercept)"]),
+       b = (swe_lm$estimate[swe_lm$site == "AIR" & swe_lm$term == "year"]), 
+       col = alpha("green4",0.5), lty = 3, lwd = 2)
 # BSW
 polygon(c(bsw$year, rev(bsw$year)), c(bsw$swe_c95, rev(bsw$swe_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(bsw$year, bsw$swe_mean, lwd=2, col = alpha("deepskyblue1",0.6))
@@ -306,7 +326,9 @@ plot(bwp$year, bwp$swe_mean, type="n", xlim = c(2000,year), ylim = c(0,200),
 # BWP
 polygon(c(bwp$year, rev(bwp$year)), c(bwp$swe_c95, rev(bwp$swe_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(bwp$year, bwp$swe_mean, lwd=2, col = alpha("green4",0.6))
-abline(coef(bwp_swe), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (swe_lm$estimate[swe_lm$site == "BWP" & swe_lm$term == "(Intercept)"]),
+       b = (swe_lm$estimate[swe_lm$site == "BWP" & swe_lm$term == "year"]), 
+       col = alpha("green4",0.5), lty = 3, lwd = 2)
 # PFR
 polygon(c(pfr$year, rev(pfr$year)), c(pfr$swe_c95, rev(pfr$swe_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(pfr$year, pfr$swe_mean, lwd=2, col = alpha("deepskyblue1",0.6))
@@ -356,7 +378,7 @@ par(mfrow = c(4,1), mar = c(1,1,1,1), oma = c(3,3,0,0))
 plot(tis$year, tis$htc_mean, type='n', xlim = c(2000,year), ylim = c(0,1), axes = F, xlab = "", ylab = "")
 polygon(c(tis$year, rev(tis$year)), c(tis$htc_c95, rev(tis$htc_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(tis$year, tis$htc_mean, col = alpha("green4",0.6), lwd = 2)
-abline(coef(tis_htc), col = alpha("green4",0.5), lty = 3, lwd = 2)
+# abline(coef(tis_htc), col = alpha("green4",0.5), lty = 3, lwd = 2)
 box()
 axis(side = 1, at = seq(2000,year,2), labels = NA)
 axis(side = 2, at = seq(0,1,0.2))
@@ -387,11 +409,15 @@ plot(bwp$year, bwp$htc_mean, type="n", xlim = c(2000,year), ylim = c(0,5),
 # BWP
 polygon(c(bwp$year, rev(bwp$year)), c(bwp$htc_c95, rev(bwp$htc_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(bwp$year, bwp$htc_mean, lwd=2, col = alpha("green4",0.6))
-abline(coef(bwp_htc), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (htc_lm$estimate[htc_lm$site == "BWP" & htc_lm$term == "(Intercept)"]),
+       b = (htc_lm$estimate[htc_lm$site == "BWP" & htc_lm$term == "year"]), 
+       col = alpha("green4",0.5), lty = 3, lwd = 2)
 # PFR
 polygon(c(pfr$year, rev(pfr$year)), c(pfr$htc_c95, rev(pfr$htc_c5)), col = alpha("cadetblue1",0.5), border = NA)
 lines(pfr$year, pfr$htc_mean, lwd=2, col = alpha("deepskyblue1",0.6))
-abline(coef(pfr_htc), col = alpha("deepskyblue1",0.5), lty = 3, lwd = 2)
+abline(a = (htc_lm$estimate[htc_lm$site == "PFR" & htc_lm$term == "(Intercept)"]),
+       b = (htc_lm$estimate[htc_lm$site == "PFR" & htc_lm$term == "year"]), 
+       col = alpha("deepskyblue1",0.5), lty = 3, lwd = 2)
 # BFR
 polygon(c(bfr$year, rev(bfr$year)), c(bfr$htc_c95, rev(bfr$htc_c5)), col = alpha("darksalmon",0.5), border = NA)
 lines(bfr$year, bfr$htc_mean, lwd=2, col = alpha("darkorange3",0.6))
@@ -411,6 +437,9 @@ lines(ppd$year, ppd$htc_mean, lwd=2, col = alpha("mediumorchid4",0.6))
 # PPA
 polygon(c(ppa$year, rev(ppa$year)), c(ppa$htc_c95, rev(ppa$htc_c5)), col = alpha("darksalmon",0.5), border = NA)
 lines(ppa$year, ppa$htc_mean, lwd=2, col = alpha("darkorange3",0.6))
+abline(a = (htc_lm$estimate[htc_lm$site == "PPA" & htc_lm$term == "(Intercept)"]),
+       b = (htc_lm$estimate[htc_lm$site == "PPA" & htc_lm$term == "year"]), 
+       col = alpha("darkorange3",0.5), lty = 3, lwd = 2)
 # TUN
 polygon(c(tun$year, rev(tun$year)), c(tun$htc_c95, rev(tun$htc_c5)), col = alpha("lightgreen",0.5), border = NA)
 lines(tun$year, tun$htc_mean, lwd=2, col = alpha("green4",0.6))
