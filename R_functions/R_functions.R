@@ -2,7 +2,7 @@
 # Function to move files to another folder (trail cam pic wrangling)
 
 # Function to copy all files
-my_function <- function(x) {
+copy_files <- function(x) {
   file.copy(
     from = file.path(input_path, x) ,
     to = file.path(output_path, x) ,
@@ -37,7 +37,7 @@ move_pics_date_only <- function(input_path) {
   file_list <- gsub(input_path, "", collector)
   
   # Copy the files
-  lapply(file_list, my_function)
+  lapply(file_list, copy_files)
   
 }
 
@@ -66,7 +66,7 @@ move_pics <- function(input_path, time_unit) {
   file_list <- gsub(input_path, "", collect_list)
   
   # Copy the files
-  lapply(file_list, my_function)
+  lapply(file_list, copy_files)
   
 }
 
