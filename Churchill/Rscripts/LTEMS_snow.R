@@ -97,7 +97,7 @@ swe_lm <- df %>%
          tidied = map(fit, tidy)) %>%
   unnest(tidied)# %>%
   # filter(term == "year", p.value <= 0.05)
-# SIG: AIR, BWP
+# SIG: AIR, BFR, BWP
 
 # HTC
 htc_lm <- df %>%
@@ -335,7 +335,9 @@ lines(pfr$year, pfr$swe_mean, lwd=2, col = alpha("deepskyblue1",0.6))
 # BFR
 polygon(c(bfr$year, rev(bfr$year)), c(bfr$swe_c95, rev(bfr$swe_c5)), col = alpha("darksalmon",0.5), border = NA)
 lines(bfr$year, bfr$swe_mean, lwd=2, col = alpha("darkorange3",0.6))
-# abline(coef(lm(bfr[,5] ~ bfr$year)), col = alpha("green4",0.5), lty = 3, lwd = 2)
+abline(a = (swe_lm$estimate[swe_lm$site == "BFR" & swe_lm$term == "(Intercept)"]),
+       b = (swe_lm$estimate[swe_lm$site == "BFR" & swe_lm$term == "year"]), 
+       col = alpha("darkorange3",0.5), lty = 3, lwd = 2)
 box()
 axis(side = 1, at = seq(2000,year,2), labels = NA)
 axis(side = 2, at = seq(0,200,50))
