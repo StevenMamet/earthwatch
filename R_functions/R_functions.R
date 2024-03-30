@@ -71,6 +71,53 @@ move_pics <- function(input_path, time_unit) {
 }
 
 #__________________________________________----
+# Fill missing values ----
+fill_missing_with_lm <- function(dat, vars, fill_var) {
+  for(i in seq_along(vars)) {
+    mod <- as.formula(paste0(vars[i], " ~ ", fill_var))
+    mod <- lm(mod, dat)
+    misses <- which(is.na(dat[[vars[i]]]))
+    for(j in misses) {
+      newdat <- setNames(data.frame(dat[[fill_var]][j]), fill_var)
+      dat[[vars[i]]][j] <- predict(mod, newdat)
+    }
+  }
+  return(dat)
+}
+
+#__________________________________________----
+# Calculate monthly R2 for gap-filling ----
+calc_monthly_r_squared <- function(df, ind_var, dep_var) {
+  df %>%
+    group_by(month) %>%
+    summarize(r_squared = summary(lm(reformulate(ind_var, dep_var), data = pick(all_of(dep_var), all_of(ind_var))))$r.squared,
+              .groups = 'drop') %>%
+    mutate(variable = dep_var)
+}
+
+#__________________________________________----
+# Automated density plot generation ----
+generate_plots <- function(data, site_prefix, height) {
+  plot_list <- list()
+  
+  for (stat in c("min", "mean", "max")) {
+    variable_name <- paste(paste(site_prefix, height, sep = ""), stat, sep = ".")
+    plot <- data %>%
+      filter(variable == variable_name) %>%
+      ggplot(aes(x = r_squared)) +
+      geom_density(fill = "#69b3a2", color = "#e9ecef", alpha = 0.8) +
+      geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+      labs(x = bquote(italic("R")^2), y = "Density") +
+      xlim(0, 1) +
+      theme_bw()
+    
+    plot_list[[stat]] <- plot
+  }
+  
+  return(plot_list)
+}
+
+#__________________________________________----
 # Wrangling all the GTREE data for the various figures
 gtree_fun <- function(df, n_yr) {
   df_list <- list()

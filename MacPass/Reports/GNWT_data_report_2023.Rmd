@@ -1,0 +1,206 @@
+---
+title: ''
+author: ''
+date: ''
+output:
+  word_document: 
+    reference_docx: word-styles-reference-01.docx
+  html_document:
+    df_print: paged
+geometry: left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm
+header-includes:
+- \usepackage{float}
+- \usepackage{sectsty}
+- \usepackage{paralist}
+- \usepackage{setspace}\spacing{1.5}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \usepackage{lastpage}
+- \usepackage{dcolumn}
+- \usepackage[nottoc, numbib]{tocbibind}
+fontfamily: arial
+mainfont: arial
+pandoc_args: ["-Fpandoc-crossref"]
+bibliography: references.bib
+csl: nature.csl
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+## This script is used to generate the GNWT report each year
+
+## Load libraries
+library(bookdown)
+library(tidyverse)
+library(knitr)
+library(officedown)
+library(officer)
+library(kableExtra)
+library(flextable)
+library(ftExtra)
+library(formattable)
+
+# opts_chunk$set(echo = FALSE)
+
+```
+
+```{r, include=FALSE}
+## Define variables to be presented in the text
+field_year <- 2023
+```
+
+# Mackenzie Mountains Climate Data Archiving Project
+Prepared 4 December 2022 by Steven Mamet^1,2^
+*^1^Department of Soil Science, College of Agriculture and Bioresources, University of Saskatchewan, Saskatoon, SK*
+*And*
+*^2^Churchill Northern Studies Centre, Churchill Manitoba*
+
+## Background  
+
+During World War II the Canol Pipeline was established to transport oil from Norman Wells to Whitehorse. The pipeline was abandoned in 1945 with oil in-situ resulting in environmental degradation as the pipeline degraded. Dr. Peter Kershaw (University of Alberta) undertook long term monitoring of the recovery and change of ecosystems to Canol Pipeline as part of his Ph.D. Research 1. He continued monitoring the recovery of the and established climate stations in the 1990s.  
+
+After Dr. Kershaw retired from the University of Alberta in 2011 and from Canol research in 2013, Dr. Steven Mamet (Adjunct Professor, University of Saskatchewan) continued the long-term research of ecosystem change including 2.
+The purpose of this project is to inventory climate data from northern climate stations operated by Dr. Steven Mamet of the University of Saskatchewan and the Churchill Northern Studies Centre. The Government of the NWT plans to archive this data in a climate database that they are developing.  
+
+## Results  
+
+Metadata including location, site description, observation period, observation and measurement frequency for six climate stations operated by Drs. Kershaw and Mamet is provided in Tables 1–3 (also see Figures 1–7). Variables measured include air temperature, ground surface temperature, rain, and snow. Air temperature was measured at approximately 1.5 m height using the custom-built radiation shield (Figure 2). Ground surface temperature was measured at 0 cm depth. Liquid precipitation was measured using a Campbell Scientific TB44 MM tipping bucket rain gauge that measures rainfall in 0.2 mm increments. Snow was measured using two LTL Acorn 5210a cameras programmed to obtain daily midday photos and four snow stakes (Figures 8, 9). Data timestamps are Mountain Standard Time (MST, UTC-7).  
+Climate station data is included in the attached Excel file MM_compiled_`r field_year`.xlsx  
+
+## Station Metadata  
+
+See ‘Metadata’ in accompanying spreadsheet.  
+
+`r run_pagebreak()`
+
+## Site photos  
+
+```{r, echo=FALSE,  fig.cap="Figure 1. The Beaver Pond weather station in August 2022.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure01.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 2. The Hare Foot weather station in August 2015.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure02.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 3. The Dale Creek #6 weather station in August 2017.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure03.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 4. The Dale Creek #2 weather station in August 2023.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure04.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 5. The Goose Flats weather station in August 2013.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure05.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 6. The location where the Snow Fence weather station operated from 1994 to 2001. The photo was taken in August 2019.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure06.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 7. Locations of the weather stations and field camps along the Canol Heritage Trail. Inset map: 1: Whitehorse, 2: Ross River, 3: Norman Wells, 4: Tulita. Site names from west to east are: D2 = Dale Creek #2, D6 = Dale Creek #6, BP = Beaver Pond, HF = Hare Foot, GF = Goose Flats, and SF = Snow Fence.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure07.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 8. Example photo taken using the Acorn LTL 5210a camera mounted at the Goose Flats site. Snow depth was measured using snow stakes placed on the palsa lee (left) and top (attached to weather station; right).", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure08.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 9. Example photo taken using the Acorn LTL 5210a camera mounted at the Hare Foot site. Snow depth was measured using snow stakes placed on the palsa lee (centre left) and top (to the right of the weather station on the palsa horizon).", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure09.jpeg")
+```
+
+`r run_pagebreak()`
+
+## Missing values and data filling
+
+There are missing values in the temperature, precipitation, and snow depth data. The temperature data ranges from 33 to 98% complete (Table 1), snow data 64 to 72% complete (Table 2), and precipitation data from 12 to 67% (Table 3). Missing temperature values were filled with monthly multiple linear regression model temperature estimates using the Environment Canada (EC) Macmillan Pass daily  data 3 (covering the period 1998-2021). All data filling and analyses were completed in R v. 4.2.2 4.
+I started by filling the most complete temperature record (mean air temperatures at site Hare Foot are 98% complete), and using both EC and the filled data in subsequent data fills at other sites. As the list of dependent variables grew, I used linear regression to choose the most predictive variables to fill the data at each site (see Table 1). Missing data were filled using transfer functions based on the regression coefficients from the linear regression. Below is an example of the linear regression in R used to gap-fill the Goose Flats monthly ground surface temperatures:
+
+<Insert code snippet here>
+
+A total of 432 regressions (6 sites x 6 variables [minimum, mean, and maximum air and ground surface temperatures] x 12 months) were used to fill the temperature data.
+Model R2s ranged from 0.153 to 1.000 (Figures 10–15), with a mean of 0.750.
+The sub-daily (4 and/or 8 hr) temperature records were not gap filled. Both the filled and unfilled data are provided to GNWT.  
+
+There are precipitation data available at three sites (D6, BP, and GF). The quality of these data is questionable (e.g., there are long periods of consecutive days where there are non-zero values). I would recommend comparing these data to Macmillan Pass EC data to check for some overlap of measurements. D6 and BP are closest to the EC station (Figure 7; 4 and 12 km, respectively) and would be good candidates for this comparison.  
+
+The snow data were collected using LTL Acorn 5210a cameras mounted near the HF and GF weather stations. The cameras were programmed to take one photo each day at midday. Snow stakes with a 10 cm-interval graticule were mounted within the field of view of each camera to determine snow depth. Two stakes were placed at each site: one at the top of the palsa to measure snow in wind-exposed areas and one on the lee of each palsa to monitor wind deposited snow (Figures 8, 9). The HF palsa top is ~4.9 m above the surrounding landscape and the GF palsa is 2.2 m.  
+
+Data lost due to periodic animal damage and/or inclement weather obscuring the camera lens (e.g., snow deposition, riming) ranged from 28 to 36%. These missing values were filled using a combination of linear interpolation using the R package ‘zoo’ v. 1.8–8 5 and monthly multiple linear regression using neighbouring data sets. The camera at both sites failed in 2019 and new ones were deployed in 2022 so the data are only current to 2019.  
+
+A total of 40 regressions (2 sites x 2 snow stakes x 10 months [July and August were typically snow-free]) were used to fill the snow depth data. Model R2s ranged from 0.208 to 1.000 (Figure 16), with a mean of 0.762.
+Examples of the daily and sub-daily temperature data with brief descriptions are provided in figures 17 and 18. Snow data examples are not included for brevity as the formats are similar to the temperature data.
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 10. Density distributions of *R*^2^ from linear models used to fill missing values in the Beaver Pond site daily air (150 cm) and ground surface temperatures. The vertical dashed line indicates mean *R*^2^.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure10.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 11. Density distributions of *R*^2^ from linear models used to fill missing values in the Hare Foot site daily air (150 cm) and ground surface temperatures. The vertical dashed line indicates mean *R*^2^.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure11.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 12. Density distributions of *R*^2^ from linear models used to fill missing values in the Dale Creek #6 site daily air (150 cm) and ground surface temperatures. The vertical dashed line indicates mean *R*^2^.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure12.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 13. Density distributions of *R*^2^ from linear models used to fill missing values in the Dale Creek #2 site daily air (150 cm) and ground surface temperatures. The vertical dashed line indicates mean *R*^2^.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure13.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 14. Density distributions of *R*^2^ from linear models used to fill missing values in the Goose Flats site daily air (150 cm) and ground surface temperatures. The vertical dashed line indicates mean *R*^2^.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure14.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 15. Density distributions of *R^2^* from linear models used to fill missing values in the daily snow depth data available from two sites. The vertical dashed line indicates mean *R^2^*.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure15.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 16. Subset of the daily temperature data. The columns rom left to right are as follows: year, month, day, Julian day, Gregorian date, followed by the temperature data.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure15.jpeg")
+```
+
+`r run_pagebreak()`
+
+```{r, echo=FALSE,  fig.cap="Figure 17. Subset of the sub-daily temperature data. The columns are as in figure 16, though output times (24:00h format) are added.", out.width="15cm"}
+knitr::include_graphics("GNWT_Figure15.jpeg")
+```
+
+`r run_pagebreak()`
+
+## References
+
+<div id="refs"></div>

@@ -3,26 +3,17 @@
 # Note that I had numerous issues where I would get an X11 error.
 # To remedy this, I had to run the following in terminal:
 # brew install xquartz --cask
+## Note that in the end, you still have to manually extract the snow data from the images
 
-library(edger)
-library(imager)
 library(tidyverse)
 library(lubridate)
 library(zoo) # Interpolating snow data
-library(grDevices)
-capabilities()
 
 rm(list = ls())
 
 setwd("~/Desktop/Workspace")
 
-im1 <- "/Users/sdmamet/Library/CloudStorage/Dropbox/School/Postdoc/Earthwatch/Mackenzie Mountains/TrailCams/GF/20200921.JPG"
-# im1 <- "../images/image03.jpg"
-par(mar = c(0,0,0,0))
-plot(imager::load.image(im1), axes = F)
-
-edger::edger_single(im1)
-
+#_____________________________________________----
 # Step 1: Read and prep the cam data ----
 mm_snow <- read.csv("./Earthwatch/MacPass/data/mm_trail_cam.csv")
 mm_snow <- mm_snow %>% 

@@ -8,70 +8,36 @@ library(vegan)
 library(forecast)
 library(wesanderson)
 library(broom)
+library(purrr)
+library(patchwork)
+library(magick)
 
 rm(list=ls())
 
-# Mac Pass met station data
+#_____________________________________-----
+# Constants ----
+curr_year <- 2023
+visual_output <- "~/Desktop/Workspace/earthwatch/MacPass/figures"
+
+#_____________________________________-----
+# Source R functions ----
+source("~/Desktop/Workspace/earthwatch/R_functions/R_functions.R")
+
+#_____________________________________-----
+# Wrangle Mac Pass met station data ----
 # macpass <- read.csv(file = "~/Desktop/Workspace/Earthwatch/microclimate.mm2.csv", header = TRUE)
-macpass <- read.csv("~/Dropbox/School/Postdoc/Earthwatch/Mackenzie Mountains/GNWT/MM_daily.csv")
-# Converts to date format (lubridate)
-macpass$date <- ymd(macpass$date)
-names(macpass) <- gsub("\\.t","", names(macpass))
+macpass <- read_csv("~/Dropbox/School/Postdoc/Earthwatch/Mackenzie Mountains/GNWT/data/MM_daily.csv")
+names(macpass) <- gsub("\\.t","", names(macpass)) # rm any ".t" in column names
 
-# plot(sf150.mean ~ date, macpass, type = "l")
-# plot(sf0.mean ~ date, macpass, type = "l")
-# plot(sf150.max ~ date, macpass, type = "l")
-# plot(sf0.max ~ date, macpass, type = "l")
-# plot(sf150.min ~ date, macpass, type = "l")
-# plot(sf0.min ~ date, macpass, type = "l")
-# 
-# plot(gf150.mean ~ date, macpass, type = "l")
-# plot(gf0.mean ~ date, macpass, type = "l")
-# plot(gf150.max ~ date, macpass, type = "l")
-# plot(gf0.max ~ date, macpass, type = "l")
-# plot(gf150.min ~ date, macpass, type = "l")
-# plot(gf0.min ~ date, macpass, type = "l")
-# 
-# plot(hf150.mean ~ date, macpass, type = "l")
-# lines(macpass$date, macpass$mean.150, col = "blue")
-# plot(hf0.mean ~ date, macpass, type = "l")
-# plot(hf150.max ~ date, macpass, type = "l")
-# plot(hf0.max ~ date, macpass, type = "l")
-# plot(hf150.min ~ date, macpass, type = "l")
-# plot(hf0.min ~ date, macpass, type = "l")
-# 
-# plot(bp150.mean ~ date, macpass, type = "l")
-# plot(bp0.mean ~ date, macpass, type = "l")
-# plot(bp150.max ~ date, macpass, type = "l")
-# plot(bp0.max ~ date, macpass, type = "l")
-# plot(bp150.min ~ date, macpass, type = "l")
-# plot(bp0.min ~ date, macpass, type = "l")
-# 
-# macpass[which.max(macpass$d2150.mean),]
-# plot(d2150.mean ~ date, macpass, type = "l")
-# plot(d20.mean ~ date, macpass, type = "l")
-# macpass[which.max(macpass$d2150.max),]
-# plot(d2150.max ~ date, macpass, type = "l")
-# plot(d20.max ~ date, macpass, type = "l")
-# plot(d2150.min ~ date, macpass, type = "l")
-# macpass[which.min(macpass$d2150.min),]
-# plot(d20.min ~ date, macpass, type = "l")
-# 
-# plot(d6150.mean ~ date, macpass, type = "l")
-# plot(d60.mean ~ date, macpass, type = "l")
-# plot(d6150.max ~ date, macpass, type = "l")
-# plot(d60.max ~ date, macpass, type = "l")
-# plot(d6150.min ~ date, macpass, type = "l")
-# plot(d60.min ~ date, macpass, type = "l")
-
-# If already downloaded:
-weather_df <- read.csv("/Users/sdmamet/Desktop/Workspace/Earthwatch/MacPass/data/MacPass_EnvCan_19980628_20210819.csv")[-1]
+#_____________________________________-----
+# Wrangle EnvCan data if already downloaded ----
+weather_df <- read_csv("/Users/sdmamet/Desktop/Workspace/Earthwatch/MacPass/data/MacPass_EnvCan_19980628_20230818.csv")[-1]
 weather_df %>% 
   ggplot(aes(x = as_datetime(datetime), y = station_temp)) + geom_line()
 
+# Convert hourly to daily
 weather_daily <- weather_df %>% 
-  mutate(datetime = as_datetime(datetime),
-         year = year(datetime),
+  mutate(year = year(datetime),
          month = month(datetime),
          day = day(datetime)) %>%
   group_by(year, month, day) %>% 
@@ -80,50 +46,95 @@ weather_daily <- weather_df %>%
   mutate(date = ymd(paste(year, month, day, sep = "-"))) %>% 
   select(-c(year, month, day))
 
+#_____________________________________-----
+# Join met station data with EnvCan and calculate mean|min|max 150 variable ----
 macpass <- left_join(macpass, weather_daily, by = "date") %>% 
   select(-c(day, datetime, dew_point, rel_humid, precip, pressure)) %>% 
   # rename(month = month.y) %>% 
   relocate(month, .after = year) %>% 
   rowwise() %>% 
-  mutate(mean.150 = mean(c(bp150.mean, hf150.mean, d2150.mean, d6150.mean, gf150.mean, station_temp), na.rm = T)) %>% 
+  mutate(min.150 = mean(c(bp150.min, hf150.min, d2150.min, d6150.min, gf150.min, station_temp), na.rm = T),
+         mean.150 = mean(c(bp150.mean, hf150.mean, d2150.mean, d6150.mean, gf150.mean, station_temp), na.rm = T),
+         max.150 = mean(c(bp150.max, hf150.max, d2150.max, d6150.max, gf150.max, station_temp), na.rm = T)) %>% 
   ungroup() %>% 
-  mutate(mean.150 = as.numeric(tsclean(mean.150))) %>% 
+  mutate(min.150 = as.numeric(tsclean(min.150)),
+         mean.150 = as.numeric(tsclean(mean.150)),
+         max.150 = as.numeric(tsclean(max.150))) %>% 
   filter(!is.na(month))
 
 macpass %>% 
   ggplot(aes(x = as_datetime(date), y = mean.150)) + geom_line()
 
-###################################################################
-## ********************
-### Step 1: Fill the missing air temperatures
+# Calculate R2s
+# results <- map_dfr(names(macpass)[5:43], ~calc_monthly_r_squared(macpass, "mean.150", .x), .id = "variable")
+min_results <-
+  map_dfr(
+    macpass %>% select(matches(".min")) %>% names(),
+    ~ calc_monthly_r_squared(macpass, "min.150", .x)
+  )
+mean_results <-
+  map_dfr(
+    macpass %>% select(matches(".mean")) %>% names(),
+    ~ calc_monthly_r_squared(macpass, "mean.150", .x)
+  )
+max_results <-
+  map_dfr(
+    macpass %>% select(matches(".max")) %>% names(),
+    ~ calc_monthly_r_squared(macpass, "max.150", .x)
+  )
 
-# Function to fill missing values
-fill_missing_with_lm <- function(dat, vars) {
-  for(i in seq_along(vars)) {
-    mod <- as.formula(paste0(vars[i], " ~ mean.150"))
-    mod <- lm(mod, dat)
-    misses <- which(is.na(dat[[ vars[i] ]]))
-    for(j in misses) {
-      newdat <- data.frame(mean.150 = dat$mean.150[j])
-      dat[[ vars[i] ]][j] <- predict(mod, newdat)
-    }
-  }
-  return(dat)
-}
+# Bind results by row to use for plot generation
+df150 <- bind_rows(min_results, mean_results, max_results)
 
-# Now can fill each month using EnvCan
+bp150_plots <- generate_plots(df150, "bp", "150")
+hf150_plots <- generate_plots(df150, "hf", "150")
+d6150_plots <- generate_plots(df150, "d6", "150")
+d2150_plots <- generate_plots(df150, "d2", "150")
+gf150_plots <- generate_plots(df150, "gf", "150")
+
+bp150_plots$min / bp150_plots$mean / bp150_plots$max
+
+#_____________________________________-----
+# Step 1: Fill the missing air temperatures ----
+
+# Mean
 macpass <- macpass %>%
   group_by(month) %>%
-  nest %>%
-  mutate(filled = map(data, fill_missing_with_lm, 
-                      vars = c("bp150.mean", "hf150.mean", "d2150.mean", "d6150.mean", "gf150.mean", "sf150.mean",
-                               "bp150.max", "hf150.max", "d2150.max", "d6150.max", "gf150.max", "sf150.max",
-                               "bp150.min", "hf150.min", "d2150.min", "d6150.min", "gf150.min", "sf150.min"
-                               ))) %>%
+  nest() %>%
+  mutate(filled = map(data, ~fill_missing_with_lm(.x, 
+                                                  vars = c("bp150.mean", "hf150.mean", "d2150.mean", "d6150.mean", "gf150.mean", "sf150.mean"),
+                                                  fill_var = "mean.150"))) %>%
   select(month, filled) %>%
   unnest(cols = c(filled)) %>% 
   arrange(date) %>% 
-  mutate(month = as.integer(month(date)))
+  mutate(month = as.integer(month(date))) %>% 
+  ungroup()
+
+# Min
+macpass <- macpass %>%
+  group_by(month) %>%
+  nest() %>%
+  mutate(filled = map(data, ~fill_missing_with_lm(.x, 
+                                                  vars = c("bp150.min", "hf150.min", "d2150.min", "d6150.min", "gf150.min", "sf150.min"),
+                                                  fill_var = "min.150"))) %>%
+  select(month, filled) %>%
+  unnest(cols = c(filled)) %>% 
+  arrange(date) %>% 
+  mutate(month = as.integer(month(date))) %>% 
+  ungroup()
+
+# Max
+macpass <- macpass %>%
+  group_by(month) %>%
+  nest() %>%
+  mutate(filled = map(data, ~fill_missing_with_lm(.x, 
+                                                  vars = c("bp150.max", "hf150.max", "d2150.max", "d6150.max", "gf150.max", "sf150.max"),
+                                                  fill_var = "max.150"))) %>%
+  select(month, filled) %>%
+  unnest(cols = c(filled)) %>% 
+  arrange(date) %>% 
+  mutate(month = as.integer(month(date))) %>% 
+  ungroup()
 
 col_pal <- wes_palette("Darjeeling1")
 
@@ -134,31 +145,388 @@ macpass %>%
   geom_line(aes(y = gf150.mean), color = col_pal[3]) +
   geom_line(aes(y = d6150.mean), color = "green")
 
+macpass %>% 
+  ggplot(aes(x = as_datetime(date), y = hf150.min)) + geom_line() +
+  geom_line(aes(y = bp150.min), color = col_pal[2]) +
+  geom_line(aes(y = d2150.min), color = "red") +
+  geom_line(aes(y = gf150.min), color = col_pal[3]) +
+  geom_line(aes(y = d6150.min), color = "green")
 
 macpass %>% 
-  mutate(bp0.min = as.numeric(ifelse(date > "2015-01-01" & date < "2019-12-31", NA, bp0.min))) %>%
+  ggplot(aes(x = as_datetime(date), y = hf150.max)) + geom_line() +
+  geom_line(aes(y = bp150.max), color = col_pal[2]) +
+  geom_line(aes(y = d2150.max), color = "red") +
+  geom_line(aes(y = gf150.max), color = col_pal[3]) +
+  geom_line(aes(y = d6150.max), color = "green")
+
+# Remove funky values
+macpass %>% 
+  # mutate(bp0.min = as.numeric(ifelse(date > "2015-01-01" & date < "2019-12-31", NA, bp0.min))) %>%
   mutate(bp0.min = ifelse(bp0.min > 50 | bp0.min < -40, NA, bp0.min)) %>%
   ggplot(aes(x = as_datetime(date), y = bp0.min)) + geom_line()
 
 macpass <- macpass %>% 
-  mutate(bp0.max = ifelse(date > "2016-01-01" & date < "2017-12-31", NA, bp0.max)) %>% 
+  mutate(bp0.max = ifelse(date > "2016-01-01" & date < "2017-12-31", NA, bp0.max)) %>%
   mutate(bp0.min = as.numeric(ifelse(date > "2015-01-01" & date < "2019-12-31", NA, bp0.min))) %>%
   mutate(bp0.min = ifelse(bp0.min > 50 | bp0.min < -40, NA, bp0.min))
 
-###################################################################
-## ********************
-### Step 2: Fill the missing ground surface temperatures
+#_____________________________________-----
+# Step 2: Fill the missing ground surface temperatures ----
 
-### Hare Foot - ground surface T ----
+sites <- c("hf", "gf", "bp", "sf", "d2", "d6")
+temp_stats <- c("min", "mean", "max")
 
-#### Mean ----
+r_squared_combined <- tibble()
+
+for (site in sites) {
+  for (stat in temp_stats) {
+    air_temp_var <- paste(paste(site, "150", sep = ""), stat, sep = ".")
+    ground_temp_var <- paste(paste(site, "0", sep = ""), stat, sep = ".")
+    
+    models <- macpass %>% 
+      group_by(month) %>% 
+      filter(!is.na(!!sym(ground_temp_var))) %>% 
+      do(model = lm(!!sym(ground_temp_var) ~ !!sym(air_temp_var), data = .),
+         r_squared = summary(lm(!!sym(ground_temp_var) ~ !!sym(air_temp_var), data = .))$r.squared) %>%
+      ungroup()
+    
+    r_squared_df <- models %>% 
+      select(month, r_squared) %>% 
+      mutate(site = site, stat = stat)
+    
+    r_squared_combined <- bind_rows(r_squared_combined, r_squared_df)
+  }
+}
+
+r_squared_combined <- r_squared_combined %>% 
+  mutate(r_squared = unlist(r_squared))
+
+hf0_plots <- list()
+
+hf0_plots$min <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "hf", stat == "min") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/4, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+hf0_plots$mean <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "hf", stat == "mean") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/2, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+hf0_plots$max <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "hf", stat == "max") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/2, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+bp0_plots <- list()
+
+bp0_plots$min <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "bp", stat == "min") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+bp0_plots$mean <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "bp", stat == "mean") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+bp0_plots$max <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "bp", stat == "max") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/2, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+d60_plots <- list()
+
+d60_plots$min <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "d6", stat == "min") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+d60_plots$mean <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "d6", stat == "mean") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+d60_plots$max <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "d6", stat == "max") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/2, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+d20_plots <- list()
+
+d20_plots$min <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "d2", stat == "min") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/2, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+d20_plots$mean <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "d2", stat == "mean") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/4, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+d20_plots$max <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "d2", stat == "max") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+gf0_plots <- list()
+
+gf0_plots$min <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "gf", stat == "min") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/2, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+gf0_plots$mean <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "gf", stat == "mean") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+
+gf0_plots$max <-
+  r_squared_combined %>%
+  mutate(r_squared = unlist(r_squared)) %>%
+  filter(site == "gf", stat == "max") %>%
+  ggplot(aes(x = r_squared)) +
+  geom_density(fill = "#69b3a2", color = "#e9ecef", trim = F, adjust = 1/3, alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(r_squared)), linetype = "dashed", color = "darkgreen") +
+  labs(x = bquote(italic("R")^2), y = "Density") +
+  xlim(0, 1) +
+  theme_bw()
+  
+(hf150_plots$min / hf150_plots$mean / hf150_plots$max) | (hf0_plots$min / hf0_plots$mean / hf0_plots$max)
+
+setwd(visual_output)
+
+#_____________________________________-----
+# BP ----
+bp150_plots$min <- bp150_plots$min + annotate("text", x = 0, y = Inf, label = "Air[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+bp150_plots$mean <- bp150_plots$mean + annotate("text", x = 0, y = Inf, label = "Air[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+bp150_plots$max <- bp150_plots$max + annotate("text", x = 0, y = Inf, label = "Air[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+bp0_plots$min <- bp0_plots$min + annotate("text", x = 0, y = Inf, label = "Surface[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+bp0_plots$mean <- bp0_plots$mean + annotate("text", x = 0, y = Inf, label = "Surface[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+bp0_plots$max <- bp0_plots$max + annotate("text", x = 0, y = Inf, label = "Surface[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+
+# Combine the plots
+bp_six_panel_plot <- ((bp150_plots$min) / (bp150_plots$mean) / (bp150_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5)) | 
+  ((bp0_plots$min) / (bp0_plots$mean) / (bp0_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5))
+
+# Use the tag label as an x-axis label
+bp_six_panel_plot <- wrap_elements(panel = bp_six_panel_plot) +
+  labs(tag = bquote(italic("R")^2)) +
+  theme(
+    plot.tag = element_text(size = rel(1)),
+    plot.tag.position = "bottom")
+
+ggsave("GNWT_Figure10.jpg", height = 8, width = 7, dpi = 300)
+bp_final_plot <- image_read("GNWT_Figure10.jpg")
+bp_final_plot <- magick::image_annotate(bp_final_plot, text = "Density", degrees = 270, location = "+1+1250", color = "black", size = 42, font = "Arial-Bold")
+image_write(bp_final_plot, path = "GNWT_Figure10.jpg", format = "jpg", quality = 100)
+
+#_____________________________________-----
+# HF ----
+hf150_plots$min <- hf150_plots$min + annotate("text", x = 0, y = Inf, label = "Air[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+hf150_plots$mean <- hf150_plots$mean + annotate("text", x = 0, y = Inf, label = "Air[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+hf150_plots$max <- hf150_plots$max + annotate("text", x = 0, y = Inf, label = "Air[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+hf0_plots$min <- hf0_plots$min + annotate("text", x = 0, y = Inf, label = "Surface[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+hf0_plots$mean <- hf0_plots$mean + annotate("text", x = 0, y = Inf, label = "Surface[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+hf0_plots$max <- hf0_plots$max + annotate("text", x = 0, y = Inf, label = "Surface[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+
+# Combine the plots
+hf_six_panel_plot <- ((hf150_plots$min) / (hf150_plots$mean) / (hf150_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5)) | 
+  ((hf0_plots$min) / (hf0_plots$mean) / (hf0_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5))
+
+# Use the tag label as an x-axis label
+hf_six_panel_plot <- wrap_elements(panel = hf_six_panel_plot) +
+  labs(tag = bquote(italic("R")^2)) +
+  theme(
+    plot.tag = element_text(size = rel(1)),
+    plot.tag.position = "bottom")
+
+ggsave("GNWT_Figure11.jpg", height = 8, width = 7, dpi = 300)
+hf_final_plot <- image_read("GNWT_Figure11.jpg")
+hf_final_plot <- magick::image_annotate(hf_final_plot, text = "Density", degrees = 270, location = "+1+1250", color = "black", size = 42, font = "Arial-Bold")
+image_write(hf_final_plot, path = "GNWT_Figure11.jpg", format = "jpg", quality = 100)
+
+#_____________________________________-----
+# D6 ----
+d6150_plots$min <- d6150_plots$min + annotate("text", x = 0, y = Inf, label = "Air[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d6150_plots$mean <- d6150_plots$mean + annotate("text", x = 0, y = Inf, label = "Air[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d6150_plots$max <- d6150_plots$max + annotate("text", x = 0, y = Inf, label = "Air[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d60_plots$min <- d60_plots$min + annotate("text", x = 0, y = Inf, label = "Surface[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d60_plots$mean <- d60_plots$mean + annotate("text", x = 0, y = Inf, label = "Surface[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d60_plots$max <- d60_plots$max + annotate("text", x = 0, y = Inf, label = "Surface[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+
+# Combine the plots
+d6_six_panel_plot <- ((d6150_plots$min) / (d6150_plots$mean) / (d6150_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5)) | 
+  ((d60_plots$min) / (d60_plots$mean) / (d60_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5))
+
+# Use the tag label as an x-axis label
+d6_six_panel_plot <- wrap_elements(panel = d6_six_panel_plot) +
+  labs(tag = bquote(italic("R")^2)) +
+  theme(
+    plot.tag = element_text(size = rel(1)),
+    plot.tag.position = "bottom")
+
+ggsave("GNWT_Figure12.jpg", height = 8, width = 7, dpi = 300)
+d6_final_plot <- image_read("GNWT_Figure12.jpg")
+d6_final_plot <- magick::image_annotate(d6_final_plot, text = "Density", degrees = 270, location = "+1+1250", color = "black", size = 42, font = "Arial-Bold")
+image_write(d6_final_plot, path = "GNWT_Figure12.jpg", format = "jpg", quality = 100)
+
+#_____________________________________-----
+# D2 ----
+d2150_plots$min <- d2150_plots$min + annotate("text", x = 0, y = Inf, label = "Air[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d2150_plots$mean <- d2150_plots$mean + annotate("text", x = 0, y = Inf, label = "Air[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d2150_plots$max <- d2150_plots$max + annotate("text", x = 0, y = Inf, label = "Air[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d20_plots$min <- d20_plots$min + annotate("text", x = 0, y = Inf, label = "Surface[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d20_plots$mean <- d20_plots$mean + annotate("text", x = 0, y = Inf, label = "Surface[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+d20_plots$max <- d20_plots$max + annotate("text", x = 0, y = Inf, label = "Surface[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+
+# Combine the plots
+d2_six_panel_plot <- ((d2150_plots$min) / (d2150_plots$mean) / (d2150_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5)) | 
+  ((d20_plots$min) / (d20_plots$mean) / (d20_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5))
+
+# Use the tag label as an x-axis label
+d2_six_panel_plot <- wrap_elements(panel = d2_six_panel_plot) +
+  labs(tag = bquote(italic("R")^2)) +
+  theme(
+    plot.tag = element_text(size = rel(1)),
+    plot.tag.position = "bottom")
+
+ggsave("GNWT_Figure13.jpg", height = 8, width = 7, dpi = 300)
+d2_final_plot <- image_read("GNWT_Figure13.jpg")
+d2_final_plot <- magick::image_annotate(d2_final_plot, text = "Density", degrees = 270, location = "+1+1250", color = "black", size = 42, font = "Arial-Bold")
+image_write(d2_final_plot, path = "GNWT_Figure13.jpg", format = "jpg", quality = 100)
+
+#_____________________________________-----
+# GF ----
+gf150_plots$min <- gf150_plots$min + annotate("text", x = 0, y = Inf, label = "Air[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+gf150_plots$mean <- gf150_plots$mean + annotate("text", x = 0, y = Inf, label = "Air[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+gf150_plots$max <- gf150_plots$max + annotate("text", x = 0, y = Inf, label = "Air[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+gf0_plots$min <- gf0_plots$min + annotate("text", x = 0, y = Inf, label = "Surface[\"min\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+gf0_plots$mean <- gf0_plots$mean + annotate("text", x = 0, y = Inf, label = "Surface[\"mean\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+gf0_plots$max <- gf0_plots$max + annotate("text", x = 0, y = Inf, label = "Surface[\"max\"]", hjust = 0, vjust = 2, size = 3.5, parse = TRUE)
+
+# Combine the plots
+gf_six_panel_plot <- ((gf150_plots$min) / (gf150_plots$mean) / (gf150_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5)) | 
+  ((gf0_plots$min) / (gf0_plots$mean) / (gf0_plots$max)) & 
+  xlab(NULL) & ylab(NULL) & theme(plot.margin = margin(5.5, 5.5, 0, 5.5))
+
+# Use the tag label as an x-axis label
+gf_six_panel_plot <- wrap_elements(panel = gf_six_panel_plot) +
+  labs(tag = bquote(italic("R")^2)) +
+  theme(
+    plot.tag = element_text(size = rel(1)),
+    plot.tag.position = "bottom")
+
+ggsave("GNWT_Figure14.jpg", height = 8, width = 7, dpi = 300)
+gf_final_plot <- image_read("GNWT_Figure14.jpg")
+gf_final_plot <- magick::image_annotate(gf_final_plot, text = "Density", degrees = 270, location = "+1+1250", color = "black", size = 42, font = "Arial-Bold")
+image_write(gf_final_plot, path = "GNWT_Figure14.jpg", format = "jpg", quality = 100)
+
+## Hare Foot ----
+
+### Mean ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(hf0.mean)) %>% 
-  do(model = lm(hf0.mean ~ hf150.mean, data = .)) %>%
+  do(model = lm(hf0.mean ~ hf150.mean, data = .),
+     r_squared = summary(lm(hf0.mean ~ hf150.mean, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
+r_squared_df <- models %>% select(month, r_squared) %>% data.frame()
 
 # generate the extra column
 mp <- mp %>%
@@ -172,12 +540,13 @@ plot(mp$date, mp$hf0.mean, type = "l")
 lines(macpass$date, macpass$hf0.mean, col = "red")
 macpass$hf0.mean <- mp$hf0.mean
 
-#### Max ----
+### Max ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(hf0.max)) %>% 
-  do(model = lm(hf0.max ~ hf150.max, data = .)) %>%
+  do(model = lm(hf0.max ~ hf150.max, data = .),
+     r_squared = summary(lm(hf0.max ~ hf150.max, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -193,12 +562,13 @@ plot(mp$date, mp$hf0.max, type = "l")
 lines(macpass$date, macpass$hf0.max, col = "red")
 macpass$hf0.max <- mp$hf0.max
 
-#### Min ----
+### Min ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(hf0.min)) %>% 
-  do(model = lm(hf0.min ~ hf150.min, data = .)) %>%
+  do(model = lm(hf0.min ~ hf150.min, data = .),
+     r_squared = summary(lm(hf0.min ~ hf150.min, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -214,14 +584,15 @@ plot(mp$date, mp$hf0.min, type = "l")
 lines(macpass$date, macpass$hf0.min, col = "red")
 macpass$hf0.min <- mp$hf0.min
 
-### Beaver Pond - ground surface T ----
+## Beaver Pond ----
 
-#### Mean ----
+### Mean ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(bp0.mean)) %>% 
-  do(model = lm(bp0.mean ~ bp150.mean, data = .)) %>%
+  do(model = lm(bp0.mean ~ bp150.mean, data = .),
+     r_squared = summary(lm(bp0.mean ~ bp150.mean, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -237,12 +608,13 @@ plot(mp$date, mp$bp0.mean, type = "l")
 lines(macpass$date, macpass$bp0.mean, col = "red")
 macpass$bp0.mean <- mp$bp0.mean
 
-#### Max ----
+### Max ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(bp0.max)) %>% 
-  do(model = lm(bp0.max ~ bp150.max, data = .)) %>%
+  do(model = lm(bp0.max ~ bp150.max, data = .),
+     r_squared = summary(lm(bp0.max ~ bp150.max, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -258,12 +630,13 @@ plot(mp$date, mp$bp0.max, type = "l")
 lines(macpass$date, macpass$bp0.max, col = "red")
 macpass$bp0.max <- mp$bp0.max
 
-#### Min ----
+### Min ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(bp0.min)) %>% 
-  do(model = lm(bp0.min ~ bp150.min, data = .)) %>%
+  do(model = lm(bp0.min ~ bp150.min, data = .),
+     r_squared = summary(lm(bp0.min ~ bp150.min, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -279,14 +652,15 @@ plot(mp$date, mp$bp0.min, type = "l")
 lines(macpass$date, macpass$bp0.min, col = "red")
 macpass$bp0.min <- mp$bp0.min
 
-### Dale 6 - ground surface T ----
+## Dale 6 ----
 
-#### Mean ----
+### Mean ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(d60.mean)) %>% 
-  do(model = lm(d60.mean ~ d6150.mean, data = .)) %>%
+  do(model = lm(d60.mean ~ d6150.mean, data = .),
+     r_squared = summary(lm(d60.mean ~ d6150.mean, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -302,12 +676,13 @@ plot(mp$date, mp$d60.mean, type = "l")
 lines(macpass$date, macpass$d60.mean, col = "red")
 macpass$d60.mean <- mp$d60.mean
 
-#### Max ----
+### Max ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(d60.max)) %>% 
-  do(model = lm(d60.max ~ d6150.max, data = .)) %>%
+  do(model = lm(d60.max ~ d6150.max, data = .),
+     r_squared = summary(lm(d60.max ~ d6150.max, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -323,12 +698,13 @@ plot(mp$date, mp$d60.max, type = "l")
 lines(macpass$date, macpass$d60.max, col = "red")
 macpass$d60.max <- mp$d60.max
 
-#### Min ----
+### Min ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(d60.min)) %>% 
-  do(model = lm(d60.min ~ d6150.min, data = .)) %>%
+  do(model = lm(d60.min ~ d6150.min, data = .),
+     r_squared = summary(lm(d60.min ~ d6150.min, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -344,14 +720,15 @@ plot(mp$date, mp$d60.min, type = "l")
 lines(macpass$date, macpass$d60.min, col = "red")
 macpass$d60.min <- mp$d60.min
 
-### Dale 2- ground surface T ----
+## Dale 2 ----
 
-#### Mean ----
+### Mean ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(d20.mean)) %>% 
-  do(model = lm(d20.mean ~ d2150.mean, data = .)) %>%
+  do(model = lm(d20.mean ~ d2150.mean, data = .),
+     r_squared = summary(lm(d20.mean ~ d2150.mean, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -367,12 +744,13 @@ plot(mp$date, mp$d20.mean, type = "l")
 lines(macpass$date, macpass$d20.mean, col = "red")
 macpass$d20.mean <- mp$d20.mean
 
-#### Max ----
+### Max ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(d20.max)) %>% 
-  do(model = lm(d20.max ~ d2150.max, data = .)) %>%
+  do(model = lm(d20.max ~ d2150.max, data = .),
+     r_squared = summary(lm(d20.max ~ d2150.max, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -388,12 +766,13 @@ plot(mp$date, mp$d20.max, type = "l")
 lines(macpass$date, macpass$d20.max, col = "red")
 macpass$d20.max <- mp$d20.max
 
-#### Min ----
+### Min ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(d20.min)) %>% 
-  do(model = lm(d20.min ~ d2150.min, data = .)) %>%
+  do(model = lm(d20.min ~ d2150.min, data = .),
+     r_squared = summary(lm(d20.min ~ d2150.min, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -409,14 +788,15 @@ plot(mp$date, mp$d20.min, type = "l")
 lines(macpass$date, macpass$d20.min, col = "red")
 macpass$d20.min <- mp$d20.min
 
-### Goose Flats - ground surface T ----
+## Goose Flats ----
 
-#### Mean ----
+### Mean ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(gf0.mean)) %>% 
-  do(model = lm(gf0.mean ~ gf150.mean, data = .)) %>%
+  do(model = lm(gf0.mean ~ gf150.mean, data = .),
+     r_squared = summary(lm(gf0.mean ~ gf150.mean, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -432,12 +812,13 @@ plot(mp$date, mp$gf0.mean, type = "l")
 lines(macpass$date, macpass$gf0.mean, col = "red")
 macpass$gf0.mean <- mp$gf0.mean
 
-#### Max ----
+### Max ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(gf0.max)) %>% 
-  do(model = lm(gf0.max ~ gf150.max, data = .)) %>%
+  do(model = lm(gf0.max ~ gf150.max, data = .),
+     r_squared = summary(lm(gf0.max ~ gf150.max, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -453,12 +834,13 @@ plot(mp$date, mp$gf0.max, type = "l")
 lines(macpass$date, macpass$gf0.max, col = "red")
 macpass$gf0.max <- mp$gf0.max
 
-#### Min ----
+### Min ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(gf0.min)) %>% 
-  do(model = lm(gf0.min ~ gf150.min, data = .)) %>%
+  do(model = lm(gf0.min ~ gf150.min, data = .),
+     r_squared = summary(lm(gf0.min ~ gf150.min, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -474,14 +856,15 @@ plot(mp$date, mp$gf0.min, type = "l")
 lines(macpass$date, macpass$gf0.min, col = "red")
 macpass$gf0.min <- mp$gf0.min
 
-### Snow Fence - ground surface T ----
+## Snow Fence ----
 
-#### Mean ----
+### Mean ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(sf0.mean)) %>% 
-  do(model = lm(sf0.mean ~ sf150.mean, data = .)) %>%
+  do(model = lm(sf0.mean ~ sf150.mean, data = .),
+     r_squared = summary(lm(sf0.mean ~ sf150.mean, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -497,12 +880,13 @@ plot(mp$date, mp$sf0.mean, type = "l")
 lines(macpass$date, macpass$sf0.mean, col = "red")
 macpass$sf0.mean <- mp$sf0.mean
 
-#### Max ----
+### Max ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(sf0.max)) %>% 
-  do(model = lm(sf0.max ~ sf150.max, data = .)) %>%
+  do(model = lm(sf0.max ~ sf150.max, data = .),
+     r_squared = summary(lm(sf0.max ~ sf150.max, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -518,12 +902,13 @@ plot(mp$date, mp$sf0.max, type = "l")
 lines(macpass$date, macpass$sf0.max, col = "red")
 macpass$sf0.max <- mp$sf0.max
 
-#### Min ----
+### Min ----
 # Construct linear model based on non-NA pairs
 models <- macpass %>% 
   group_by(month) %>% 
   filter(!is.na(sf0.min)) %>% 
-  do(model = lm(sf0.min ~ sf150.min, data = .)) %>%
+  do(model = lm(sf0.min ~ sf150.min, data = .),
+     r_squared = summary(lm(sf0.min ~ sf150.min, data = .))$r.squared) %>%
   ungroup()
 mp <- left_join(as_tibble(macpass), models, by = "month")
 
@@ -539,272 +924,8 @@ plot(mp$date, mp$sf0.min, type = "l")
 lines(macpass$date, macpass$sf0.min, col = "red")
 macpass$sf0.min <- mp$sf0.min
 
-write.csv(macpass, "~/Dropbox/School/Postdoc/Earthwatch/Mackenzie Mountains/GNWT/MM_daily_2022_filled.csv")
+macpass %>% 
+  ggplot(aes(x = date, y = d60.mean)) + geom_line()
 
-## The below code no longer works since I changed the code used for gap-filling
+write_csv(macpass, sprintf("~/Dropbox/School/Postdoc/Earthwatch/Mackenzie Mountains/GNWT/MM_daily_%s_filled.csv", curr_year))
 
-# df.list <- c(paste("bp150.min",seq(1,12), "fit", sep = "."),
-#              paste("bp150.mean",seq(1,12), "fit", sep = "."),
-#              paste("bp150.max",seq(1,12), "fit", sep = "."),
-#              paste("bp0.min",seq(1,12), "fit", sep = "."),
-#              paste("bp0.mean",seq(1,12), "fit", sep = "."),
-#              paste("bp0.max",seq(1,12), "fit", sep = "."),
-#              paste("hf150.min",seq(1,12), "fit", sep = "."),
-#              paste("hf150.mean",seq(1,12), "fit", sep = "."),
-#              paste("hf150.max",seq(1,12), "fit", sep = "."),
-#              paste("hf0.min",seq(1,12), "fit", sep = "."),
-#              paste("hf0.mean",seq(1,12), "fit", sep = "."),
-#              paste("hf0.max",seq(1,12), "fit", sep = "."),
-#              paste("d6150.min",seq(1,12), "fit", sep = "."),
-#              paste("d6150.mean",seq(1,12), "fit", sep = "."),
-#              paste("d6150.max",seq(1,12), "fit", sep = "."),
-#              paste("d60.min",seq(1,12), "fit", sep = "."),
-#              paste("d60.mean",seq(1,12), "fit", sep = "."),
-#              paste("d60.max",seq(1,12), "fit", sep = "."),
-#              paste("d2150.min",seq(1,12), "fit", sep = "."),
-#              paste("d2150.mean",seq(1,12), "fit", sep = "."),
-#              paste("d2150.max",seq(1,12), "fit", sep = "."),
-#              paste("d20.min",seq(1,12), "fit", sep = "."),
-#              paste("d20.mean",seq(1,12), "fit", sep = "."),
-#              paste("d20.max",seq(1,12), "fit", sep = "."),
-#              paste("gf150.min",seq(1,12), "fit", sep = "."),
-#              paste("gf150.mean",seq(1,12), "fit", sep = "."),
-#              paste("gf150.max",seq(1,12), "fit", sep = "."),
-#              paste("gf0.min",seq(1,12), "fit", sep = "."),
-#              paste("gf0.mean",seq(1,12), "fit", sep = "."),
-#              paste("gf0.max",seq(1,12), "fit", sep = "."),
-#              paste("sf150.min",seq(1,12), "fit", sep = "."),
-#              paste("sf150.mean",seq(1,12), "fit", sep = "."),
-#              paste("sf150.max",seq(1,12), "fit", sep = "."),
-#              paste("sf0.min",seq(1,12), "fit", sep = "."),
-#              paste("sf0.mean",seq(1,12), "fit", sep = "."),
-#              paste("sf0.max",seq(1,12), "fit", sep = "."))
-#              
-#              
-# df_list <- lapply(df.list, get)                     # Convert that vector to a list
-# 
-# coefficients <- unlist(sapply(df_list, RsquareAdj))
-# 
-# r2.df <- cbind.data.frame(model = c(paste("bp150min",seq(1,12), "fit", sep = "."),
-#                                     paste("bp150mean",seq(1,12), "fit", sep = "."),
-#                                     paste("bp150max",seq(1,12), "fit", sep = "."),
-#                                     paste("bp0min",seq(1,12), "fit", sep = "."),
-#                                     paste("bp0mean",seq(1,12), "fit", sep = "."),
-#                                     paste("bp0max",seq(1,12), "fit", sep = "."),
-#                                     paste("hf150min",seq(1,12), "fit", sep = "."),
-#                                     paste("hf150mean",seq(1,12), "fit", sep = "."),
-#                                     paste("hf150max",seq(1,12), "fit", sep = "."),
-#                                     paste("hf0min",seq(1,12), "fit", sep = "."),
-#                                     paste("hf0mean",seq(1,12), "fit", sep = "."),
-#                                     paste("hf0max",seq(1,12), "fit", sep = "."),
-#                                     paste("d6150min",seq(1,12), "fit", sep = "."),
-#                                     paste("d6150mean",seq(1,12), "fit", sep = "."),
-#                                     paste("d6150max",seq(1,12), "fit", sep = "."),
-#                                     paste("d60min",seq(1,12), "fit", sep = "."),
-#                                     paste("d60mean",seq(1,12), "fit", sep = "."),
-#                                     paste("d60max",seq(1,12), "fit", sep = "."),
-#                                     paste("d2150min",seq(1,12), "fit", sep = "."),
-#                                     paste("d2150mean",seq(1,12), "fit", sep = "."),
-#                                     paste("d2150max",seq(1,12), "fit", sep = "."),
-#                                     paste("d20min",seq(1,12), "fit", sep = "."),
-#                                     paste("d20mean",seq(1,12), "fit", sep = "."),
-#                                     paste("d20max",seq(1,12), "fit", sep = "."),
-#                                     paste("gf150min",seq(1,12), "fit", sep = "."),
-#                                     paste("gf150mean",seq(1,12), "fit", sep = "."),
-#                                     paste("gf150max",seq(1,12), "fit", sep = "."),
-#                                     paste("gf0min",seq(1,12), "fit", sep = "."),
-#                                     paste("gf0mean",seq(1,12), "fit", sep = "."),
-#                                     paste("gf0max",seq(1,12), "fit", sep = "."),
-#                                     paste("sf150min",seq(1,12), "fit", sep = "."),
-#                                     paste("sf150mean",seq(1,12), "fit", sep = "."),
-#                                     paste("sf150max",seq(1,12), "fit", sep = "."),
-#                                     paste("sf0min",seq(1,12), "fit", sep = "."),
-#                                     paste("sf0mean",seq(1,12), "fit", sep = "."),
-#                                     paste("sf0max",seq(1,12), "fit", sep = ".")),
-#                           r2 = coefficients[seq(1,length(coefficients),2)])
-# bp.air.min <- density(r2.df[c(1:12),2])
-# bp.air.mean <- density(r2.df[c(13:24),2])
-# bp.air.max <- density(r2.df[c(25:36),2])
-# bp.grd.min <- density(r2.df[c(37:48),2])
-# bp.grd.mean <- density(r2.df[c(49:60),2])
-# bp.grd.max <- density(r2.df[c(61:72),2])
-# 
-# hf.air.min <- density(r2.df[c(73:84),2])
-# hf.air.mean <- density(r2.df[c(85:96),2])
-# hf.air.max <- density(r2.df[c(97:108),2])
-# hf.grd.min <- density(r2.df[c(109:120),2])
-# hf.grd.mean <- density(r2.df[c(121:132),2])
-# hf.grd.max <- density(r2.df[c(133:144),2])
-# 
-# d6.air.min <- density(r2.df[c(145:156),2])
-# d6.air.mean <- density(r2.df[c(157:168),2])
-# d6.air.max <- density(r2.df[c(169:180),2])
-# d6.grd.min <- density(r2.df[c(181:192),2])
-# d6.grd.mean <- density(r2.df[c(193:204),2])
-# d6.grd.max <- density(r2.df[c(205:216),2])
-# 
-# d2.air.min <- density(r2.df[c(217:228),2])
-# d2.air.mean <- density(r2.df[c(229:240),2])
-# d2.air.max <- density(r2.df[c(241:252),2])
-# d2.grd.min <- density(r2.df[c(253:264),2])
-# d2.grd.mean <- density(r2.df[c(265:276),2])
-# d2.grd.max <- density(r2.df[c(277:288),2])
-# 
-# gf.air.min <- density(r2.df[c(289:300),2])
-# gf.air.mean <- density(r2.df[c(301:312),2])
-# gf.air.max <- density(r2.df[c(313:324),2])
-# gf.grd.min <- density(r2.df[c(325:336),2])
-# gf.grd.mean <- density(r2.df[c(337:348),2])
-# gf.grd.max <- density(r2.df[c(349:360),2])
-# 
-# sf.air.min <- density(r2.df[c(361:372),2])
-# sf.air.mean <- density(r2.df[c(373:384),2])
-# sf.air.max <- density(r2.df[c(385:396),2])
-# sf.grd.min <- density(r2.df[c(397:408),2])
-# sf.grd.mean <- density(r2.df[c(409:420),2])
-# sf.grd.max <- density(r2.df[c(421:432),2])
-# 
-# jpeg("bp.jpg", width = 6, height = 6, units = "in", res = 300)
-# par(mfcol = c(3,2), mar = c(1.5,1.5,1,1), oma = c(2,2,0,0))
-# plot(bp.air.min$x, bp.air.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(1:12),2]), lty = 3)
-# legend("topleft", expression("Air"["min"]), bty = "n", cex = 0.85)
-# plot(bp.air.mean$x, bp.air.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(13:24),2]), lty = 3)
-# legend("topleft", expression("Air"["mean"]), bty = "n", cex = 0.85)
-# plot(bp.air.max$x, bp.air.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(25:36),2]), lty = 3)
-# legend("topleft", expression("Air"["max"]), bty = "n", cex = 0.85)
-# plot(bp.grd.min$x, bp.grd.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(37:48),2]), lty = 3)
-# legend("topleft", expression("Surface"["min"]), bty = "n", cex = 0.85)
-# plot(bp.grd.mean$x, bp.grd.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(49:60),2]), lty = 3)
-# legend("topleft", expression("Surface"["mean"]), bty = "n", cex = 0.85)
-# plot(bp.grd.max$x, bp.grd.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(61:72),2]), lty = 3)
-# legend("topleft", expression("Surface"["max"]), bty = "n", cex = 0.85)
-# mtext(substitute(paste(italic(r)^2)), side = 1, outer = T, cex = 0.8, line = 0.7)
-# mtext("Density", side = 2, outer = T, line = 0.7, cex = 0.7)
-# dev.off()
-# 
-# jpeg("hf.jpg", width = 6, height = 6, units = "in", res = 300)
-# par(mfcol = c(3,2), mar = c(1.5,1.5,1,1), oma = c(2,2,0,0))
-# plot(hf.air.min$x, hf.air.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(73:84),2]), lty = 3)
-# legend("topleft", expression("Air"["min"]), bty = "n", cex = 0.85)
-# plot(hf.air.mean$x, hf.air.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(85:96),2]), lty = 3)
-# legend("topleft", expression("Air"["mean"]), bty = "n", cex = 0.85)
-# plot(hf.air.max$x, hf.air.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(97:108),2]), lty = 3)
-# legend("topleft", expression("Air"["max"]), bty = "n", cex = 0.85)
-# plot(hf.grd.min$x, hf.grd.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(109:120),2]), lty = 3)
-# legend("topleft", expression("Surface"["min"]), bty = "n", cex = 0.85)
-# plot(hf.grd.mean$x, hf.grd.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(121:132),2]), lty = 3)
-# legend("topleft", expression("Surface"["mean"]), bty = "n", cex = 0.85)
-# plot(hf.grd.max$x, hf.grd.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(133:144),2]), lty = 3)
-# legend("topleft", expression("Surface"["max"]), bty = "n", cex = 0.85)
-# mtext(substitute(paste(italic(r)^2)), side = 1, outer = T, cex = 0.8, line = 0.7)
-# mtext("Density", side = 2, outer = T, line = 0.7, cex = 0.7)
-# dev.off()
-# 
-# jpeg("d6.jpg", width = 6, height = 6, units = "in", res = 300)
-# par(mfcol = c(3,2), mar = c(1.5,1.5,1,1), oma = c(2,2,0,0))
-# plot(d6.air.min$x, d6.air.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(145:156),2]), lty = 3)
-# legend("topleft", expression("Air"["min"]), bty = "n", cex = 0.85)
-# plot(d6.air.mean$x, d6.air.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(157:168),2]), lty = 3)
-# legend("topleft", expression("Air"["mean"]), bty = "n", cex = 0.85)
-# plot(d6.air.max$x, d6.air.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(169:180),2]), lty = 3)
-# legend("topleft", expression("Air"["max"]), bty = "n", cex = 0.85)
-# plot(d6.grd.min$x, d6.grd.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(181:192),2]), lty = 3)
-# legend("topleft", expression("Surface"["min"]), bty = "n", cex = 0.85)
-# plot(d6.grd.mean$x, d6.grd.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(193:204),2]), lty = 3)
-# legend("topleft", expression("Surface"["mean"]), bty = "n", cex = 0.85)
-# plot(d6.grd.max$x, d6.grd.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(205:216),2]), lty = 3)
-# legend("topleft", expression("Surface"["max"]), bty = "n", cex = 0.85)
-# mtext(substitute(paste(italic(r)^2)), side = 1, outer = T, cex = 0.8, line = 0.7)
-# mtext("Density", side = 2, outer = T, line = 0.7, cex = 0.7)
-# dev.off()
-# 
-# jpeg("d2.jpg", width = 6, height = 6, units = "in", res = 300)
-# par(mfcol = c(3,2), mar = c(1.5,1.5,1,1), oma = c(2,2,0,0))
-# plot(d2.air.min$x, d2.air.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(217:228),2]), lty = 3)
-# legend("topleft", expression("Air"["min"]), bty = "n", cex = 0.85)
-# plot(d2.air.mean$x, d2.air.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(229:240),2]), lty = 3)
-# legend("topleft", expression("Air"["mean"]), bty = "n", cex = 0.85)
-# plot(d2.air.max$x, d2.air.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(241:252),2]), lty = 3)
-# legend("topleft", expression("Air"["max"]), bty = "n", cex = 0.85)
-# plot(d2.grd.min$x, d2.grd.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(253:264),2]), lty = 3)
-# legend("topleft", expression("Surface"["min"]), bty = "n", cex = 0.85)
-# plot(d2.grd.mean$x, d2.grd.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(265:276),2]), lty = 3)
-# legend("topleft", expression("Surface"["mean"]), bty = "n", cex = 0.85)
-# plot(d2.grd.max$x, d2.grd.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(277:288),2]), lty = 3)
-# legend("topleft", expression("Surface"["max"]), bty = "n", cex = 0.85)
-# mtext(substitute(paste(italic(r)^2)), side = 1, outer = T, cex = 0.8, line = 0.7)
-# mtext("Density", side = 2, outer = T, line = 0.7, cex = 0.7)
-# dev.off()
-# 
-# jpeg("gf.jpg", width = 6, height = 6, units = "in", res = 300)
-# par(mfcol = c(3,2), mar = c(1.5,1.5,1,1), oma = c(2,2,0,0))
-# plot(gf.air.min$x, gf.air.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(289:300),2]), lty = 3)
-# legend("topleft", expression("Air"["min"]), bty = "n", cex = 0.85)
-# plot(gf.air.mean$x, gf.air.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(301:312),2]), lty = 3)
-# legend("topleft", expression("Air"["mean"]), bty = "n", cex = 0.85)
-# plot(gf.air.max$x, gf.air.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(313:324),2]), lty = 3)
-# legend("topleft", expression("Air"["max"]), bty = "n", cex = 0.85)
-# plot(gf.grd.min$x, gf.grd.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(325:336),2]), lty = 3)
-# legend("topleft", expression("Surface"["min"]), bty = "n", cex = 0.85)
-# plot(gf.grd.mean$x, gf.grd.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(337:348),2]), lty = 3)
-# legend("topleft", expression("Surface"["mean"]), bty = "n", cex = 0.85)
-# plot(gf.grd.max$x, gf.grd.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(349:360),2]), lty = 3)
-# legend("topleft", expression("Surface"["max"]), bty = "n", cex = 0.85)
-# mtext(substitute(paste(italic(r)^2)), side = 1, outer = T, cex = 0.8, line = 0.7)
-# mtext("Density", side = 2, outer = T, line = 0.7, cex = 0.7)
-# dev.off()
-# 
-# jpeg("sf.jpg", width = 6, height = 6, units = "in", res = 300)
-# par(mfcol = c(3,2), mar = c(1.5,1.5,1,1), oma = c(2,2,0,0))
-# plot(sf.air.min$x, sf.air.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(361:372),2]), lty = 3)
-# legend("topleft", expression("Air"["min"]), bty = "n", cex = 0.85)
-# plot(sf.air.mean$x, sf.air.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(373:384),2]), lty = 3)
-# legend("topleft", expression("Air"["mean"]), bty = "n", cex = 0.85)
-# plot(sf.air.max$x, sf.air.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(385:396),2]), lty = 3)
-# legend("topleft", expression("Air"["max"]), bty = "n", cex = 0.85)
-# plot(sf.grd.min$x, sf.grd.min$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(397:408),2]), lty = 3)
-# legend("topleft", expression("Surface"["min"]), bty = "n", cex = 0.85)
-# plot(sf.grd.mean$x, sf.grd.mean$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(409:420),2]), lty = 3)
-# legend("topleft", expression("Surface"["mean"]), bty = "n", cex = 0.85)
-# plot(sf.grd.max$x, sf.grd.max$y, type = "l", xlim = c(0,1))
-# abline(v = mean(r2.df[c(421:432),2]), lty = 3)
-# legend("topleft", expression("Surface"["max"]), bty = "n", cex = 0.85)
-# mtext(substitute(paste(italic(r)^2)), side = 1, outer = T, cex = 0.8, line = 0.7)
-# mtext("Density", side = 2, outer = T, line = 0.7, cex = 0.7)
-# dev.off()
-# 
