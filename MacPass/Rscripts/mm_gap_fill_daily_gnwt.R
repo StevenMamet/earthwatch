@@ -65,6 +65,33 @@ macpass <- left_join(macpass, weather_daily, by = "date") %>%
 macpass %>% 
   ggplot(aes(x = as_datetime(date), y = mean.150)) + geom_line()
 
+result_df <- macpass %>%
+  filter(date > "2022-08-18") %>% 
+  select(5:ncol(macpass)) %>%  # Adjust this to select columns from the 5th to the last
+  summarise(across(everything(), list(total = ~n(), na_count = ~sum(is.na(.))))) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+
+# Assuming the row names are important and contain the variable names and the metric
+  tibble::rownames_to_column("name") %>%
+  separate(name, into = c("variable", "metric"), sep = "_", extra = "merge") %>%
+  pivot_wider(names_from = metric, values_from = V1) %>%
+  
+  # Compute non-NA count and percentage
+  mutate(
+    non_na_total = total - na_count,
+    percent_complete = (non_na_total / total) * 100
+  ) %>%
+  select(variable, non_na_total, total, percent_complete)
+
+# Clean up variable names if needed
+result_df$variable <- gsub("\\.total", "", result_df$variable)
+
+# Save RDS file
+saveRDS(result_df, file = "./earthwatch/MacPass/Reports/Table01.rds", compress = FALSE)
+tab1 <- readRDS("./earthwatch/MacPass/Reports/Table01.rds")
+
+
 # Calculate R2s
 # results <- map_dfr(names(macpass)[5:43], ~calc_monthly_r_squared(macpass, "mean.150", .x), .id = "variable")
 min_results <-
@@ -85,6 +112,9 @@ max_results <-
 
 # Bind results by row to use for plot generation
 df150 <- bind_rows(min_results, mean_results, max_results)
+
+# Summary stats for the report
+summary(df150$r_squared)
 
 bp150_plots <- generate_plots(df150, "bp", "150")
 hf150_plots <- generate_plots(df150, "hf", "150")
