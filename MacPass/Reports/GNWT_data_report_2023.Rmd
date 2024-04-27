@@ -66,15 +66,15 @@ Prepared 24 April 2024 by Steven Mamet^1,2^
 
 # Background  
 
-During World War II the Canol Pipeline was established to transport oil from Norman Wells to Whitehorse. The pipeline was abandoned in 1945 with oil in-situ resulting in environmental degradation as the pipeline degraded. Dr. Peter Kershaw (University of Alberta) undertook long term monitoring of the recovery and change of ecosystems to Canol Pipeline as part of his Ph.D. Research @RN2558. He continued monitoring the recovery of the and established climate stations in the 1990s.  
+During World War II the Canol Pipeline was established to transport oil from Norman Wells to Whitehorse. The pipeline was abandoned in 1945 with oil in-situ resulting in environmental degradation as the pipeline degraded. Dr. Peter Kershaw (University of Alberta) undertook long term monitoring of the recovery and change of ecosystems to Canol Pipeline as part of his Ph.D. Research @RN2558. He continued monitoring the recovery of vegetation communities and established climate stations in the 1990s.  
 
-After Dr. Kershaw retired from the University of Alberta in 2011 and from Canol research in 2013, Dr. Steven Mamet (Adjunct Professor, University of Saskatchewan) continued the long-term research of ecosystem change including @RN5191.  
+After Dr. Kershaw retired from the University of Alberta in 2011 and from Canol research in 2013, Dr. Steven Mamet (Adjunct Professor, University of Saskatchewan) continued the long-term research of ecosystem change including Mamet et al. (2017)@RN5191.  
 
 The purpose of this project is to inventory climate data from northern climate stations operated by Dr. Steven Mamet of the University of Saskatchewan and the Churchill Northern Studies Centre. The Government of the NWT plans to archive this data in a climate database that they are developing.  
 
 # Results  
 
-Metadata including location, site description, observation period, observation and measurement frequency for six climate stations operated by Drs. Kershaw and Mamet is provided in Tables 1–2 (also see Figures 1–7). Variables measured include air temperature, ground surface temperature, rain, and snow. Air temperature was measured at approximately 1.5 m height using the custom-built radiation shield (Figure 2).  
+Metadata including location, site description, observation period, observation and measurement frequency for six climate stations operated by Drs. Kershaw and Mamet is provided in Tables 1–2 (also see Figures 1–7). Variables measured include air temperature, ground surface temperature, rain, and snow. Air temperature was measured at approximately 1.5 m height using the custom-built radiation shield (Figure 1).  
 
 Ground surface temperature was measured at 0 cm depth. Liquid precipitation was measured using a Campbell Scientific TB44 MM tipping bucket rain gauge that measures rainfall in 0.2 mm increments. Snow was measured using two LTL Acorn 5210a cameras programmed to obtain daily midday photos and four snow stakes (Figures 8, 9). Recent failures of the LTL cameras have led to their replacement with Reconyx HyperFire 2™ Covert IR trail cameras, though there currently no new snow data to report for 2023. Data timestamps are Mountain Standard Time (MST, UTC-7).  
 
@@ -196,11 +196,11 @@ A total of 360 regressions (5 sites x 6 variables [minimum, mean, and maximum ai
 Model R^2^s ranged from `r min_r2` to `r max_r2` (Figures 10–14), with a mean of `r mean_r2`
 The sub-daily (4 and/or 8 hr) temperature records were not gap filled. Both the filled and unfilled data are provided to GNWT.  
 
-There are precipitation data available at two sites (BP, and GF). The quality of the GF data is questionable (e.g., there are long periods of consecutive days where there are zero values). I would recommend comparing these data to Macmillan Pass EC data to check for some overlap of measurements. BP is closest to the EC station (Figure 7; 4 and 12 km, respectively) and would be good candidates for this comparison.  
+There are precipitation data available at one site (GF). The quality of the GF data is questionable (e.g., there are long periods of consecutive days where there are zero values). I would recommend comparing these data to Macmillan Pass EC data to check for some overlap of measurements. 
 
 The snow data were collected using either LTL Acorn 5210a or Reconyx HyperFire 2™ Covert IR trail cameras mounted near the HF and GF weather stations. The cameras were programmed to take one photo each day at midday. Snow stakes with a 10 cm-interval graticule were mounted within the field of view of each camera to determine snow depth. Two stakes were placed at each site: one at the top of the palsa to measure snow in wind-exposed areas and one on the lee of each palsa to monitor wind deposited snow (Figures 8, 9). The HF palsa top is ~4.9 m above the surrounding landscape and the GF palsa is 2.2 m.  
 
-Data were lost due to periodic animal damage and/or inclement weather obscuring the camera lens (e.g., snow deposition, riming). These missing values were previously filled using a combination of linear interpolation using the R package ‘zoo’ v. 1.8–12 @RN6089 and monthly multiple linear regression using neighbouring data sets. The camera at both sites failed in 2019 and new ones were deployed in 2022 and 2023 so the data are only current to 2019. GNWT has already been provided these data.  
+Photo data were lost due to periodic animal damage and/or inclement weather obscuring the camera lens (e.g., snow deposition, riming). These missing values were previously filled using a combination of linear interpolation using the R package ‘zoo’ v. 1.8–12 @RN6089 and monthly multiple linear regression using neighbouring data sets. The camera at both sites failed in 2019 and new ones were deployed in 2022 and 2023 so the data are only current to 2019. GNWT has already been provided these data.  
 
 <!-- A total of 40 regressions (2 sites x 2 snow stakes x 10 months [July and August were typically snow-free]) were used to fill the snow depth data. Model R2s ranged from 0.208 to 1.000 (Figure 16), with a mean of 0.762. -->
 <!-- Examples of the daily and sub-daily temperature data with brief descriptions are provided in figures 17 and 18. Snow data examples are not included for brevity as the formats are similar to the temperature data. -->
