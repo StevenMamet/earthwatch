@@ -30,7 +30,7 @@ p <- c("MacPass_EnvCan_19980628")
 
 #______________________________----
 # Functions----
-source("./Earthwatch/MacPass/Rscripts/R_functions.R")
+source("./Earthwatch/R_functions/R_functions.R")
 
 #______________________________----
 # Read in station data ----
