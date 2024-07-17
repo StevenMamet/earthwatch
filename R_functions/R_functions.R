@@ -1,3 +1,167 @@
+#_________________________________________________-----
+# Helper functions
+
+# Function to standardize "YEAR" column
+standardize_year_column <- function(df) {
+  if ("YEAR" %in% colnames(df)) {
+    df <- df %>% rename(YEAR = YEAR)
+  } else if ("Year" %in% colnames(df)) {
+    df <- df %>% rename(YEAR = Year)
+  } else if ("year" %in% colnames(df)) {
+    df <- df %>% rename(YEAR = year)
+  }
+  return(df)
+}
+
+#_________________________________________________-----
+# This script will download the latest Env Can weather data for the station of interest
+library(dplyr)
+library(lubridate)
+library(tsibble)
+library(progress)
+library(readr) # Ensure you have the readr package loaded for write_csv function
+
+weather_download <- function(df, weather_station, time_zone, time_unit, location) {
+  # Initialize the progress bar with 4 steps
+  pb <- progress_bar$new(
+    format = "  Downloading [:bar] :percent in :elapsed",
+    total = 4,
+    clear = FALSE,
+    width = 60
+  )
+  
+  # Step 1: Download/update stations data
+  stations_dl()
+  pb$tick() # Update the progress bar
+  
+  # Step 2: Search for station ID
+  station_id <- stations_search(weather_station, dist = 50, interval = time_unit) %>% 
+    filter(prov == "MB", end == 2023) %>%
+    slice_min(start) %>%
+    pull(station_id)
+  pb$tick() # Update the progress bar
+  
+  # Step 3: Download weather data
+  start_date <- min(df$Date)
+  end_date <- max(df$Date)
+  w_df <- weather_dl(station_ids = station_id, start = start_date, end = end_date)
+  pb$tick() # Update the progress bar
+  
+  # Step 4: Data manipulation and saving CSV
+  weather_df <- w_df %>%
+    rename(
+      station_temp = temp,
+      datetime = time,
+      dew_point = temp_dew,
+      rel_humid = rel_hum,
+      precip = precip_amt
+    ) %>%
+    select(datetime, station_temp, dew_point, rel_humid, precip, pressure) %>%
+    mutate(
+      datetime = as_datetime(datetime, tz = time_zone),
+      station_temp = as.numeric(station_temp),
+      dew_point = as.numeric(dew_point),
+      rel_humid = as.numeric(rel_humid),
+      precip = as.numeric(precip),
+      pressure = as.numeric(pressure)
+    ) %>%
+    filter(datetime > start_date & datetime <= end_date) %>%
+    mutate(
+      station_temp = tsclean(station_temp),
+      rel_humid = tsclean(rel_humid),
+      pressure = tsclean(pressure)
+    )
+  
+  min_date <- min(weather_df$datetime)
+  min_year <- year(min_date)
+  min_month <- sprintf("%02d", month(min_date))
+  min_day <- sprintf("%02d", day(min_date))
+  max_date <- max(weather_df$datetime)
+  max_year <- year(max_date)
+  max_month <- sprintf("%02d", month(max_date))
+  max_day <- sprintf("%02d", day(max_date))
+  save_path <- sprintf(
+    "./earthwatch/%s/data/%s_EnvCan_%s%s%s_%s%s%s.csv",
+    location,
+    location,
+    min_year,
+    min_month,
+    min_day,
+    max_year,
+    max_month,
+    max_day
+  )
+  
+  write_csv(weather_df, save_path)
+  pb$tick() # Final update of the progress bar
+  
+  return(weather_df)
+}
+
+#_________________________________________________-----
+# Reads in most recent Env Can file of interest
+read_most_recent_weather <- function(data_output, p) {
+  file_list <- file.info(list.files(paste(data_output, "data", sep = "/"), full.names = T))
+  file_list <- file_list[apply(sapply(X = p, FUN = grepl, rownames(file_list)),
+                               MARGIN =  1,
+                               FUN = all), ]
+  file_pattern <- rownames(file_list[which.max(file_list$mtime),])
+  df <- read_csv(file_pattern) %>%
+    # Make datetime column and generate full timestamps
+    mutate(datetime = as_datetime(datetime, tz = time_zone))
+  return(df)
+  
+}
+
+#_________________________________________________-----
+# Join weather data frame with station data
+weather_join <- function(weather_df, df) {
+  weather_daily <- weather_df %>%
+    select(-1) %>%
+    mutate(
+      datetime = as_datetime(datetime),
+      year = year(datetime),
+      month = month(datetime),
+      day = day(datetime)
+    ) %>%
+    group_by(year, month, day) %>%
+    summarise(across(everything(), ~ mean(., na.rm = T))) %>%
+    ungroup() %>%
+    mutate(Date = ymd(paste(year, month, day, sep = "-")))
+  
+  df <- df %>%
+    standardize_year_column() %>%
+    left_join(weather_daily, by = "Date") %>%
+    select(-c(
+      month.x,
+      day,
+      datetime,
+      dew_point,
+      year,
+      rel_humid,
+      precip,
+      pressure
+    )) %>%
+    rename(month = month.y) %>%
+    relocate(month, .after = YEAR) %>%
+    rowwise() %>%
+    mutate(mean.150 = mean(c_across(matches("150")), na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(mean.150 = as.numeric(tsclean(mean.150)))
+  
+  # Select only the columns containing "150" but not "neg150"
+  cols_150 <- df %>% select(matches("150")) %>% select(-matches("neg150"))
+  
+  # Calculate the mean of the selected columns
+  df <- df %>%
+    rowwise() %>%
+    mutate(mean.150 = mean(c_across(all_of(names(cols_150))), na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(mean.150 = as.numeric(tsclean(mean.150)))
+  
+  return(df)
+}
+
 #__________________________________________----
 # Function to move files to another folder (trail cam pic wrangling)
 
@@ -69,6 +233,21 @@ move_pics <- function(input_path, time_unit) {
   lapply(file_list, copy_files)
   
 }
+
+#_________________________________________________-----
+# Function to fill missing values
+# fill_missing_with_lm <- function(dat, vars) {
+#   for(i in seq_along(vars)) {
+#     mod <- as.formula(paste0(vars[i], " ~ mean.150"))
+#     mod <- lm(mod, dat)
+#     misses <- which(is.na(dat[[ vars[i] ]]))
+#     for(j in misses) {
+#       newdat <- data.frame(mean.150 = dat$mean.150[j])
+#       dat[[ vars[i] ]][j] <- predict(mod, newdat)
+#     }
+#   }
+#   return(dat)
+# }
 
 #__________________________________________----
 # Fill missing values ----
