@@ -18,6 +18,7 @@ library(weathercan)   # Get weather station details from Environment Canada
 library(patchwork)    # Tidy organizing of plots
 library(wesanderson)  # Nice color palettes
 library(modelr)       # Tidy modeling
+
 #______________________________----
 # Constants ----
 col_pal <- wes_palette("Darjeeling1")

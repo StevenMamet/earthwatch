@@ -17,6 +17,7 @@ library(purrr)        # Functional programming tools
 library(weathercan)   # Get weather station details from Environment Canada
 library(patchwork)    # Tidy organizing of plots
 library(wesanderson)  # Nice color palettes
+library(modelr)       # Tidy modeling
 
 #______________________________----
 # Constants ----
@@ -26,6 +27,7 @@ time_zone <- "Canada/Yukon"
 time_unit <- "hour"
 weather_station <- "MACMILLAN PASS"
 data_output <- "./Earthwatch/MacPass/"
+location <- "MacPass"
 p <- c("MacPass_EnvCan_19980628")
 
 #______________________________----
@@ -74,7 +76,7 @@ p1 / p2 / p3 / p4 / p5
 # Otherwise, read in the existing data below
 
 # Get the correct station ID, make a df using that ID and the time period of interest, and download
-# weather_df <- weather_download(macpass, weather_station, time_zone, time_unit)
+# weather_df <- weather_download(macpass, weather_station, time_zone, time_unit, location)
 
 # If already downloaded:
 weather_df <- read_most_recent_weather(data_output, p)
@@ -91,27 +93,44 @@ macpass %>%
 # 🫶 Step 2: Fill missing air temperatures ----
 
 # Now can fill each month using EnvCan
+# Select columns that match the criteria
+air_t_cols <- macpass %>%
+  select(matches("150"), -matches("neg150")) %>%
+  names()
+
+# Fill missing values using linear models
 macpass <- macpass %>%
+  mutate(month = as.integer(month(Date))) %>%
   group_by(month) %>%
-  nest %>%
-  mutate(filled = map(data, fill_missing_with_lm, vars = c("hf.150","bp.150","d2.150","d6.150","gf.150"))) %>%
+  nest() %>%
+  mutate(filled = map(data, ~ fill_missing_with_lm(.x, vars = air_t_cols, fill_var = "mean.150"))) %>%
   select(month, filled) %>%
-  unnest(cols = c(filled)) %>% 
-  arrange(Date) %>% 
-  mutate(month = as.integer(month(Date)))
+  unnest(cols = c(filled)) %>%
+  arrange(Date) %>%
+  ungroup()
 
-macpass %>% 
-  ggplot(aes(x = as_datetime(Date), y = hf.150)) + geom_line() +
-  geom_line(aes(y = bp.150), color = col_pal[2]) +
-  geom_line(aes(y = d2.150), color = "red") +
-  geom_line(aes(y = gf.150), color = col_pal[3]) +
-  geom_line(aes(y = d6.150), color = "green")
+# Create the initial ggplot object with the x-aesthetic
+p <- ggplot(macpass, aes(x = Date))
 
-macpass %>% 
-  ggplot(aes(x = as_datetime(Date), y = hf.150)) + geom_line()
+# Use lapply to create a list of geom_line layers for each selected column
+line_layers <- lapply(1:length(air_t_cols), function(i) {
+  geom_line(aes(y = .data[[air_t_cols[i]]]), color = i)  # Using i as a placeholder for color
+})
+
+# Add all the geom_line layers to the ggplot object
+p + line_layers
+
+macpass <- macpass %>% 
+  arrange(Date)
 
 #______________________________----
 # 🤠 Step 3: Fill the missing ground surface temperatures ----
+
+# Select columns that end with a zero and do not contain other numbers
+ground_surface_cols <- macpass %>%
+  select(matches("^[^0-9]*0$"), matches("d2.0"), matches("d6.0")) %>%
+  colnames()
+ground_surface_cols <- ground_surface_cols[c(2,1,5,4,3)]
 
 #_________----
 ## Hare Foot - ground surface T ----
@@ -132,9 +151,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(hf.0 = ifelse(is.na(hf.0), pred, hf.0))
-plot(mp$Date, mp$hf.0, type = "l")
-lines(macpass$Date, macpass$hf.0, col = "red")
-macpass$hf.0 <- mp$hf.0
+mp %>% ggplot(aes(x = Date, y = .data[[ground_surface_cols[1]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[ground_surface_cols[1]]]), color = "red")
+macpass[[ground_surface_cols[1]]] <- mp[[ground_surface_cols[1]]]
 
 #_________----
 ## Beaver Pond - ground surface T ----
@@ -155,9 +174,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(bp.0 = ifelse(is.na(bp.0), pred, bp.0))
-plot(mp$Date, mp$bp.0, type = "l")
-lines(macpass$Date, macpass$bp.0, col = "red")
-macpass$bp.0 <- mp$bp.0
+mp %>% ggplot(aes(x = Date, y = .data[[ground_surface_cols[2]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[ground_surface_cols[2]]]), color = "red")
+macpass[[ground_surface_cols[2]]] <- mp[[ground_surface_cols[2]]]
 
 #_________----
 ## Dale 6 - ground surface T ----
@@ -178,9 +197,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(d6.0 = ifelse(is.na(d6.0), pred, d6.0))
-plot(mp$Date, mp$d6.0, type = "l")
-lines(macpass$Date, macpass$d6.0, col = "red")
-macpass$d6.0 <- mp$d6.0
+mp %>% ggplot(aes(x = Date, y = .data[[ground_surface_cols[3]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[ground_surface_cols[3]]]), color = "red")
+macpass[[ground_surface_cols[3]]] <- mp[[ground_surface_cols[3]]]
 
 #_________----
 ## Dale 2 - ground surface T ----
@@ -201,9 +220,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(d2.0 = ifelse(is.na(d2.0), pred, d2.0))
-plot(mp$Date, mp$d2.0, type = "l")
-lines(macpass$Date, macpass$d2.0, col = "red")
-macpass$d2.0 <- mp$d2.0
+mp %>% ggplot(aes(x = Date, y = .data[[ground_surface_cols[4]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[ground_surface_cols[4]]]), color = "red")
+macpass[[ground_surface_cols[4]]] <- mp[[ground_surface_cols[4]]]
 
 #_________----
 ## Goose Flats - ground surface T ----
@@ -224,12 +243,18 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(gf.0 = ifelse(is.na(gf.0), pred, gf.0))
-plot(mp$Date, mp$gf.0, type = "l")
-lines(macpass$Date, macpass$gf.0, col = "red")
-macpass$gf.0 <- mp$gf.0
+mp %>% ggplot(aes(x = Date, y = .data[[ground_surface_cols[5]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[ground_surface_cols[5]]]), color = "red")
+macpass[[ground_surface_cols[5]]] <- mp[[ground_surface_cols[5]]]
 
 #______________________________----
 # 👀 Step 4: Fill the missing -150 cm temperatures ----
+
+# Select columns that end with neg150
+sub_surface_cols <- macpass %>%
+  select(matches("neg150")) %>%
+  colnames()
+sub_surface_cols <- sub_surface_cols[c(2,1,4,3,5)]
 
 #_________----
 ## Hare Foot - -150 cm ----
@@ -250,9 +275,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(hf.neg150 = ifelse(is.na(hf.neg150), pred, hf.neg150))
-plot(mp$Date, mp$hf.neg150, type = "l")
-lines(macpass$Date, macpass$hf.neg150, col = "red")
-macpass$hf.neg150 <- mp$hf.neg150
+mp %>% ggplot(aes(x = Date, y = .data[[sub_surface_cols[1]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[sub_surface_cols[1]]]), color = "red")
+macpass[[sub_surface_cols[1]]] <- mp[[sub_surface_cols[1]]]
 
 #_________----
 ## Beaver Pond - -150 cm ----
@@ -273,9 +298,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(bp.neg150 = ifelse(is.na(bp.neg150), pred, bp.neg150))
-plot(mp$Date, mp$bp.neg150, type = "l")
-lines(macpass$Date, macpass$bp.neg150, col = "red")
-macpass$bp.neg150 <- mp$bp.neg150
+mp %>% ggplot(aes(x = Date, y = .data[[sub_surface_cols[2]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[sub_surface_cols[2]]]), color = "red")
+macpass[[sub_surface_cols[2]]] <- mp[[sub_surface_cols[2]]]
 
 #_________----
 ## Dale 6 - -150 cm ----
@@ -296,9 +321,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(d6.neg150 = ifelse(is.na(d6.neg150), pred, d6.neg150))
-plot(mp$Date, mp$d6.neg150, type = "l")
-lines(macpass$Date, macpass$d6.neg150, col = "red")
-macpass$d6.neg150 <- mp$d6.neg150
+mp %>% ggplot(aes(x = Date, y = .data[[sub_surface_cols[3]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[sub_surface_cols[3]]]), color = "red")
+macpass[[sub_surface_cols[3]]] <- mp[[sub_surface_cols[3]]]
 
 #_________----
 ## Dale 2 - -150 cm ----
@@ -319,9 +344,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(d2.neg150 = ifelse(is.na(d2.neg150), pred, d2.neg150))
-plot(mp$Date, mp$d2.neg150, type = "l")
-lines(macpass$Date, macpass$d2.neg150, col = "red")
-macpass$d2.neg150 <- mp$d2.neg150
+mp %>% ggplot(aes(x = Date, y = .data[[sub_surface_cols[4]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[sub_surface_cols[4]]]), color = "red")
+macpass[[sub_surface_cols[4]]] <- mp[[sub_surface_cols[4]]]
 
 #_________----
 ## Goose Flats - -150 cm ----
@@ -342,9 +367,9 @@ mp <- mp %>%
   ungroup() %>% 
   arrange(Date) %>% 
   mutate(gf.neg150 = ifelse(is.na(gf.neg150), pred, gf.neg150))
-plot(mp$Date, mp$gf.neg150, type = "l")
-lines(macpass$Date, macpass$gf.neg150, col = "red")
-macpass$gf.neg150 <- mp$gf.neg150
+mp %>% ggplot(aes(x = Date, y = .data[[sub_surface_cols[5]]])) + geom_line() +
+  geom_line(data = macpass, aes(y = .data[[sub_surface_cols[5]]]), color = "red")
+macpass[[sub_surface_cols[5]]] <- mp[[sub_surface_cols[5]]]
 
 ## Generate the date range
 min_date <- min(macpass$Date)
