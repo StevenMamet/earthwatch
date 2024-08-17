@@ -5,6 +5,8 @@ library(lmtest)
 library(scales)
 library(wesanderson)
 library(patchwork)
+library(purrr)
+library(broom)
 
 rm(list = ls())
 
@@ -1069,6 +1071,27 @@ porsild_1_slope <- round(coef(porsild_1_lm)[[2]], 3)
 porsild_2_slope <- round(coef(porsild_2_lm)[[2]], 3)
 beaver_slope <- round(coef(beaver_lm)[[2]], 3)
 hare_slope <- round(coef(hare_lm)[[2]], 3)
+
+# Create a function to fit a linear model and extract the required information
+fit_lm <- function(data) {
+  model <- lm(mean ~ year, data = data)
+  summary <- summary(model)
+  
+  tibble(
+    intercept = coef(summary)[1, "Estimate"],
+    slope = coef(summary)[2, "Estimate"],
+    r_squared = summary$r.squared,
+    n = nrow(data)
+  )
+}
+
+# Apply this function to each site
+regression_results <- thaw_mm %>%
+  group_by(site) %>%
+  nest() %>%
+  mutate(model_info = map(data, fit_lm)) %>%
+  unnest(model_info) %>%
+  select(-data)
 
 # Export at 7 x 7
 # Export at 5 x 3.5

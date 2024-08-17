@@ -76,7 +76,10 @@ p1 / p2 / p3 / p4 / p5
 # Otherwise, read in the existing data below
 
 # Get the correct station ID, make a df using that ID and the time period of interest, and download
-# weather_df <- weather_download(macpass, weather_station, time_zone, time_unit, location)
+# temp_df <- tibble(
+#   Date = as_date(c(min(macpass$Date), "2024-08-12"))
+# )
+# weather_df <- weather_download(temp_df, weather_station, time_zone, time_unit, location)
 
 # If already downloaded:
 weather_df <- read_most_recent_weather(data_output, p)
