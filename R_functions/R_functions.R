@@ -222,6 +222,13 @@ move_pics <- function(input_path, time_unit) {
     
   }
   
+  # Collect the paths and file list
+  collector <- list.files(
+    # getwd(),
+    input_path,
+    full.names = T, # capture the file names along with the full path
+    recursive = T)  # look in subfolders
+  
   # Create df containing the modified times for each file and use to create file index
   temp_df <- file.info(collector)$mtime
   collect_list <- collector[which(grepl(time_unit, temp_df))]
@@ -234,7 +241,7 @@ move_pics <- function(input_path, time_unit) {
   
 }
 
-#_________________________________________________-----
+#_________________________________________________--
 # Function to fill missing values
 # fill_missing_with_lm <- function(dat, vars) {
 #   for(i in seq_along(vars)) {
@@ -394,22 +401,31 @@ gtree_fun <- function(df, n_yr) {
                       df_list$mm_sshr$treatment %in% c("seeded", "seeded.scarified") &
                       df_list$mm_sshr$exclosure == "no", ]
   
-  df_list$x1a <-
-    factor(df_list$mm_nalp_fir_ex[, "treat"], levels = c("2", "4"))
-  df_list$x1b <-
-    factor(df_list$mm_nalp_fir_no[, "treat"], levels = c("2", "4"))
-  df_list$x2a <-
-    factor(df_list$mm_salp_fir_ex[, "treat"], levels = c("2", "4"))
-  df_list$x2b <-
-    factor(df_list$mm_salp_fir_no[, "treat"], levels = c("2", "4"))
-  df_list$x3a <-
-    factor(df_list$mm_scut_fir_ex[, "treat"], levels = c("2", "4"))
-  df_list$x3b <-
-    factor(df_list$mm_scut_fir_no[, "treat"], levels = c("2", "4"))
-  df_list$x4a <-
-    factor(df_list$mm_sshr_fir_ex[, "treat"], levels = c("2", "4"))
-  df_list$x4b <-
-    factor(df_list$mm_sshr_fir_no[, "treat"], levels = c("2", "4"))
+  df_list$x1a <- df_list$mm_nalp_fir_ex[, "treat"]
+  df_list$x1b <- df_list$mm_nalp_fir_no[, "treat"]
+  df_list$x2a <- df_list$mm_salp_fir_ex[, "treat"]
+  df_list$x2b <- df_list$mm_salp_fir_no[, "treat"]
+  df_list$x3a <- df_list$mm_scut_fir_ex[, "treat"]
+  df_list$x3b <- df_list$mm_scut_fir_no[, "treat"]
+  df_list$x4a <- df_list$mm_sshr_fir_ex[, "treat"]
+  df_list$x4b <- df_list$mm_sshr_fir_no[, "treat"]
+  
+  # df_list$x1a <-
+  #   factor(df_list$mm_nalp_fir_ex[, "treat"], levels = c("2", "4"))
+  # df_list$x1b <-
+  #   factor(df_list$mm_nalp_fir_no[, "treat"], levels = c("2", "4"))
+  # df_list$x2a <-
+  #   factor(df_list$mm_salp_fir_ex[, "treat"], levels = c("2", "4"))
+  # df_list$x2b <-
+  #   factor(df_list$mm_salp_fir_no[, "treat"], levels = c("2", "4"))
+  # df_list$x3a <-
+  #   factor(df_list$mm_scut_fir_ex[, "treat"], levels = c("2", "4"))
+  # df_list$x3b <-
+  #   factor(df_list$mm_scut_fir_no[, "treat"], levels = c("2", "4"))
+  # df_list$x4a <-
+  #   factor(df_list$mm_sshr_fir_ex[, "treat"], levels = c("2", "4"))
+  # df_list$x4b <-
+  #   factor(df_list$mm_sshr_fir_no[, "treat"], levels = c("2", "4"))
   
   df_list$mm_nalp_fir_no_seed <-
     data.frame(
@@ -421,7 +437,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_fir_no$surv_prop_2[df_list$mm_nalp_fir_no$treatment == "seeded"]),
           length(df_list$mm_nalp_fir_no$surv_prop_3[df_list$mm_nalp_fir_no$treatment == "seeded"]),
           length(df_list$mm_nalp_fir_no$surv_prop_4[df_list$mm_nalp_fir_no$treatment == "seeded"]),
-          length(df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded"])
+          length(df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded"]),
+          length(df_list$mm_nalp_fir_no$surv_prop_6[df_list$mm_nalp_fir_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -430,7 +447,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_fir_no$surv_prop_2[df_list$mm_nalp_fir_no$treatment == "seeded"],
         df_list$mm_nalp_fir_no$surv_prop_3[df_list$mm_nalp_fir_no$treatment == "seeded"],
         df_list$mm_nalp_fir_no$surv_prop_4[df_list$mm_nalp_fir_no$treatment == "seeded"],
-        df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded"]
+        df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded"],
+        df_list$mm_nalp_fir_no$surv_prop_6[df_list$mm_nalp_fir_no$treatment == "seeded"]
       )
     )
   df_list$mm_nalp_fir_ex_seed <-
@@ -443,7 +461,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_fir_ex$surv_prop_2[df_list$mm_nalp_fir_ex$treatment == "seeded"]),
           length(df_list$mm_nalp_fir_ex$surv_prop_3[df_list$mm_nalp_fir_ex$treatment == "seeded"]),
           length(df_list$mm_nalp_fir_ex$surv_prop_4[df_list$mm_nalp_fir_ex$treatment == "seeded"]),
-          length(df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded"])
+          length(df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded"]),
+          length(df_list$mm_nalp_fir_ex$surv_prop_6[df_list$mm_nalp_fir_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -452,7 +471,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_fir_ex$surv_prop_2[df_list$mm_nalp_fir_ex$treatment == "seeded"],
         df_list$mm_nalp_fir_ex$surv_prop_3[df_list$mm_nalp_fir_ex$treatment == "seeded"],
         df_list$mm_nalp_fir_ex$surv_prop_4[df_list$mm_nalp_fir_ex$treatment == "seeded"],
-        df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded"]
+        df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded"],
+        df_list$mm_nalp_fir_ex$surv_prop_6[df_list$mm_nalp_fir_ex$treatment == "seeded"]
       )
     )
   df_list$mm_nalp_fir_no_seedscar <-
@@ -465,7 +485,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_fir_no$surv_prop_2[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_fir_no$surv_prop_3[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_fir_no$surv_prop_4[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"])
+          length(df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_nalp_fir_no$surv_prop_6[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -474,7 +495,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_fir_no$surv_prop_2[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"],
         df_list$mm_nalp_fir_no$surv_prop_3[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"],
         df_list$mm_nalp_fir_no$surv_prop_4[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"],
-        df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"]
+        df_list$mm_nalp_fir_no$surv_prop_5[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"],
+        df_list$mm_nalp_fir_no$surv_prop_6[df_list$mm_nalp_fir_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_nalp_fir_ex_seedscar <-
@@ -487,7 +509,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_fir_ex$surv_prop_2[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_fir_ex$surv_prop_3[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_fir_ex$surv_prop_4[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_nalp_fir_ex$surv_prop_6[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -496,7 +519,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_fir_ex$surv_prop_2[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_nalp_fir_ex$surv_prop_3[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_nalp_fir_ex$surv_prop_4[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"],
-        df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"]
+        df_list$mm_nalp_fir_ex$surv_prop_5[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"],
+        df_list$mm_nalp_fir_ex$surv_prop_6[df_list$mm_nalp_fir_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -588,7 +612,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_fir_no$surv_prop_2[df_list$mm_salp_fir_no$treatment == "seeded"]),
           length(df_list$mm_salp_fir_no$surv_prop_3[df_list$mm_salp_fir_no$treatment == "seeded"]),
           length(df_list$mm_salp_fir_no$surv_prop_4[df_list$mm_salp_fir_no$treatment == "seeded"]),
-          length(df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded"])
+          length(df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded"]),
+          length(df_list$mm_salp_fir_no$surv_prop_6[df_list$mm_salp_fir_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -597,7 +622,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_fir_no$surv_prop_2[df_list$mm_salp_fir_no$treatment == "seeded"],
         df_list$mm_salp_fir_no$surv_prop_3[df_list$mm_salp_fir_no$treatment == "seeded"],
         df_list$mm_salp_fir_no$surv_prop_4[df_list$mm_salp_fir_no$treatment == "seeded"],
-        df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded"]
+        df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded"],
+        df_list$mm_salp_fir_no$surv_prop_6[df_list$mm_salp_fir_no$treatment == "seeded"]
       )
     )
   df_list$mm_salp_fir_ex_seed <-
@@ -610,7 +636,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_fir_ex$surv_prop_2[df_list$mm_salp_fir_ex$treatment == "seeded"]),
           length(df_list$mm_salp_fir_ex$surv_prop_3[df_list$mm_salp_fir_ex$treatment == "seeded"]),
           length(df_list$mm_salp_fir_ex$surv_prop_4[df_list$mm_salp_fir_ex$treatment == "seeded"]),
-          length(df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded"])
+          length(df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded"]),
+          length(df_list$mm_salp_fir_ex$surv_prop_6[df_list$mm_salp_fir_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -619,7 +646,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_fir_ex$surv_prop_2[df_list$mm_salp_fir_ex$treatment == "seeded"],
         df_list$mm_salp_fir_ex$surv_prop_3[df_list$mm_salp_fir_ex$treatment == "seeded"],
         df_list$mm_salp_fir_ex$surv_prop_4[df_list$mm_salp_fir_ex$treatment == "seeded"],
-        df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded"]
+        df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded"],
+        df_list$mm_salp_fir_ex$surv_prop_6[df_list$mm_salp_fir_ex$treatment == "seeded"]
       )
     )
   df_list$mm_salp_fir_no_seedscar <-
@@ -632,7 +660,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_fir_no$surv_prop_2[df_list$mm_salp_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_fir_no$surv_prop_3[df_list$mm_salp_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_fir_no$surv_prop_4[df_list$mm_salp_fir_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded.scarified"])
+          length(df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_salp_fir_no$surv_prop_6[df_list$mm_salp_fir_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -641,7 +670,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_fir_no$surv_prop_2[df_list$mm_salp_fir_no$treatment == "seeded.scarified"],
         df_list$mm_salp_fir_no$surv_prop_3[df_list$mm_salp_fir_no$treatment == "seeded.scarified"],
         df_list$mm_salp_fir_no$surv_prop_4[df_list$mm_salp_fir_no$treatment == "seeded.scarified"],
-        df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded.scarified"]
+        df_list$mm_salp_fir_no$surv_prop_5[df_list$mm_salp_fir_no$treatment == "seeded.scarified"],
+        df_list$mm_salp_fir_no$surv_prop_6[df_list$mm_salp_fir_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_salp_fir_ex_seedscar <-
@@ -654,7 +684,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_fir_ex$surv_prop_2[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_fir_ex$surv_prop_3[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_fir_ex$surv_prop_4[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_salp_fir_ex$surv_prop_6[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -663,7 +694,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_fir_ex$surv_prop_2[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_salp_fir_ex$surv_prop_3[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_salp_fir_ex$surv_prop_4[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"],
-        df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"]
+        df_list$mm_salp_fir_ex$surv_prop_5[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"],
+        df_list$mm_salp_fir_ex$surv_prop_6[df_list$mm_salp_fir_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -755,7 +787,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_spruce_no$surv_prop_2[df_list$mm_nalp_spruce_no$treatment == "seeded"]),
           length(df_list$mm_nalp_spruce_no$surv_prop_3[df_list$mm_nalp_spruce_no$treatment == "seeded"]),
           length(df_list$mm_nalp_spruce_no$surv_prop_4[df_list$mm_nalp_spruce_no$treatment == "seeded"]),
-          length(df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded"])
+          length(df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded"]),
+          length(df_list$mm_nalp_spruce_no$surv_prop_6[df_list$mm_nalp_spruce_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -764,7 +797,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_spruce_no$surv_prop_2[df_list$mm_nalp_spruce_no$treatment == "seeded"],
         df_list$mm_nalp_spruce_no$surv_prop_3[df_list$mm_nalp_spruce_no$treatment == "seeded"],
         df_list$mm_nalp_spruce_no$surv_prop_4[df_list$mm_nalp_spruce_no$treatment == "seeded"],
-        df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded"]
+        df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded"],
+        df_list$mm_nalp_spruce_no$surv_prop_6[df_list$mm_nalp_spruce_no$treatment == "seeded"]
       )
     )
   df_list$mm_nalp_spruce_ex_seed <-
@@ -777,7 +811,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_spruce_ex$surv_prop_2[df_list$mm_nalp_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_nalp_spruce_ex$surv_prop_3[df_list$mm_nalp_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_nalp_spruce_ex$surv_prop_4[df_list$mm_nalp_spruce_ex$treatment == "seeded"]),
-          length(df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded"])
+          length(df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded"]),
+          length(df_list$mm_nalp_spruce_ex$surv_prop_6[df_list$mm_nalp_spruce_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -786,7 +821,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_spruce_ex$surv_prop_2[df_list$mm_nalp_spruce_ex$treatment == "seeded"],
         df_list$mm_nalp_spruce_ex$surv_prop_3[df_list$mm_nalp_spruce_ex$treatment == "seeded"],
         df_list$mm_nalp_spruce_ex$surv_prop_4[df_list$mm_nalp_spruce_ex$treatment == "seeded"],
-        df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded"]
+        df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded"],
+        df_list$mm_nalp_spruce_ex$surv_prop_6[df_list$mm_nalp_spruce_ex$treatment == "seeded"]
       )
     )
   df_list$mm_nalp_spruce_no_seedscar <-
@@ -799,7 +835,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_spruce_no$surv_prop_2[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_spruce_no$surv_prop_3[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_spruce_no$surv_prop_4[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"])
+          length(df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_nalp_spruce_no$surv_prop_6[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -808,7 +845,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_spruce_no$surv_prop_2[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_nalp_spruce_no$surv_prop_3[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_nalp_spruce_no$surv_prop_4[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"],
-        df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"]
+        df_list$mm_nalp_spruce_no$surv_prop_5[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"],
+        df_list$mm_nalp_spruce_no$surv_prop_6[df_list$mm_nalp_spruce_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_nalp_spruce_ex_seedscar <-
@@ -821,7 +859,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_nalp_spruce_ex$surv_prop_2[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_spruce_ex$surv_prop_3[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_nalp_spruce_ex$surv_prop_4[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_nalp_spruce_ex$surv_prop_6[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -830,7 +869,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_nalp_spruce_ex$surv_prop_2[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_nalp_spruce_ex$surv_prop_3[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_nalp_spruce_ex$surv_prop_4[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"],
-        df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"]
+        df_list$mm_nalp_spruce_ex$surv_prop_5[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"],
+        df_list$mm_nalp_spruce_ex$surv_prop_6[df_list$mm_nalp_spruce_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -922,7 +962,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_spruce_no$surv_prop_2[df_list$mm_salp_spruce_no$treatment == "seeded"]),
           length(df_list$mm_salp_spruce_no$surv_prop_3[df_list$mm_salp_spruce_no$treatment == "seeded"]),
           length(df_list$mm_salp_spruce_no$surv_prop_4[df_list$mm_salp_spruce_no$treatment == "seeded"]),
-          length(df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded"])
+          length(df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded"]),
+          length(df_list$mm_salp_spruce_no$surv_prop_6[df_list$mm_salp_spruce_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -931,7 +972,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_spruce_no$surv_prop_2[df_list$mm_salp_spruce_no$treatment == "seeded"],
         df_list$mm_salp_spruce_no$surv_prop_3[df_list$mm_salp_spruce_no$treatment == "seeded"],
         df_list$mm_salp_spruce_no$surv_prop_4[df_list$mm_salp_spruce_no$treatment == "seeded"],
-        df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded"]
+        df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded"],
+        df_list$mm_salp_spruce_no$surv_prop_6[df_list$mm_salp_spruce_no$treatment == "seeded"]
       )
     )
   df_list$mm_salp_spruce_ex_seed <-
@@ -944,7 +986,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_spruce_ex$surv_prop_2[df_list$mm_salp_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_salp_spruce_ex$surv_prop_3[df_list$mm_salp_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_salp_spruce_ex$surv_prop_4[df_list$mm_salp_spruce_ex$treatment == "seeded"]),
-          length(df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded"])
+          length(df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded"]),
+          length(df_list$mm_salp_spruce_ex$surv_prop_6[df_list$mm_salp_spruce_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -953,7 +996,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_spruce_ex$surv_prop_2[df_list$mm_salp_spruce_ex$treatment == "seeded"],
         df_list$mm_salp_spruce_ex$surv_prop_3[df_list$mm_salp_spruce_ex$treatment == "seeded"],
         df_list$mm_salp_spruce_ex$surv_prop_4[df_list$mm_salp_spruce_ex$treatment == "seeded"],
-        df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded"]
+        df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded"],
+        df_list$mm_salp_spruce_ex$surv_prop_6[df_list$mm_salp_spruce_ex$treatment == "seeded"]
       )
     )
   df_list$mm_salp_spruce_no_seedscar <-
@@ -966,7 +1010,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_spruce_no$surv_prop_2[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_spruce_no$surv_prop_3[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_spruce_no$surv_prop_4[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"])
+          length(df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_salp_spruce_no$surv_prop_6[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -975,7 +1020,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_spruce_no$surv_prop_2[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_salp_spruce_no$surv_prop_3[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_salp_spruce_no$surv_prop_4[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"],
-        df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"]
+        df_list$mm_salp_spruce_no$surv_prop_5[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"],
+        df_list$mm_salp_spruce_no$surv_prop_6[df_list$mm_salp_spruce_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_salp_spruce_ex_seedscar <-
@@ -988,7 +1034,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_salp_spruce_ex$surv_prop_2[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_spruce_ex$surv_prop_3[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_salp_spruce_ex$surv_prop_4[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_salp_spruce_ex$surv_prop_6[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -997,7 +1044,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_salp_spruce_ex$surv_prop_2[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_salp_spruce_ex$surv_prop_3[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_salp_spruce_ex$surv_prop_4[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"],
-        df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"]
+        df_list$mm_salp_spruce_ex$surv_prop_5[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"],
+        df_list$mm_salp_spruce_ex$surv_prop_6[df_list$mm_salp_spruce_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -1089,7 +1137,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_fir_no$surv_prop_2[df_list$mm_scut_fir_no$treatment == "seeded"]),
           length(df_list$mm_scut_fir_no$surv_prop_3[df_list$mm_scut_fir_no$treatment == "seeded"]),
           length(df_list$mm_scut_fir_no$surv_prop_4[df_list$mm_scut_fir_no$treatment == "seeded"]),
-          length(df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded"])
+          length(df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded"]),
+          length(df_list$mm_scut_fir_no$surv_prop_6[df_list$mm_scut_fir_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1098,7 +1147,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_fir_no$surv_prop_2[df_list$mm_scut_fir_no$treatment == "seeded"],
         df_list$mm_scut_fir_no$surv_prop_3[df_list$mm_scut_fir_no$treatment == "seeded"],
         df_list$mm_scut_fir_no$surv_prop_4[df_list$mm_scut_fir_no$treatment == "seeded"],
-        df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded"]
+        df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded"],
+        df_list$mm_scut_fir_no$surv_prop_6[df_list$mm_scut_fir_no$treatment == "seeded"]
       )
     )
   df_list$mm_scut_fir_ex_seed <-
@@ -1111,7 +1161,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_fir_ex$surv_prop_2[df_list$mm_scut_fir_ex$treatment == "seeded"]),
           length(df_list$mm_scut_fir_ex$surv_prop_3[df_list$mm_scut_fir_ex$treatment == "seeded"]),
           length(df_list$mm_scut_fir_ex$surv_prop_4[df_list$mm_scut_fir_ex$treatment == "seeded"]),
-          length(df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded"])
+          length(df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded"]),
+          length(df_list$mm_scut_fir_ex$surv_prop_6[df_list$mm_scut_fir_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1120,7 +1171,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_fir_ex$surv_prop_2[df_list$mm_scut_fir_ex$treatment == "seeded"],
         df_list$mm_scut_fir_ex$surv_prop_3[df_list$mm_scut_fir_ex$treatment == "seeded"],
         df_list$mm_scut_fir_ex$surv_prop_4[df_list$mm_scut_fir_ex$treatment == "seeded"],
-        df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded"]
+        df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded"],
+        df_list$mm_scut_fir_ex$surv_prop_6[df_list$mm_scut_fir_ex$treatment == "seeded"]
       )
     )
   df_list$mm_scut_fir_no_seedscar <-
@@ -1133,7 +1185,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_fir_no$surv_prop_2[df_list$mm_scut_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_fir_no$surv_prop_3[df_list$mm_scut_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_fir_no$surv_prop_4[df_list$mm_scut_fir_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded.scarified"])
+          length(df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_scut_fir_no$surv_prop_6[df_list$mm_scut_fir_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1142,7 +1195,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_fir_no$surv_prop_2[df_list$mm_scut_fir_no$treatment == "seeded.scarified"],
         df_list$mm_scut_fir_no$surv_prop_3[df_list$mm_scut_fir_no$treatment == "seeded.scarified"],
         df_list$mm_scut_fir_no$surv_prop_4[df_list$mm_scut_fir_no$treatment == "seeded.scarified"],
-        df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded.scarified"]
+        df_list$mm_scut_fir_no$surv_prop_5[df_list$mm_scut_fir_no$treatment == "seeded.scarified"],
+        df_list$mm_scut_fir_no$surv_prop_6[df_list$mm_scut_fir_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_scut_fir_ex_seedscar <-
@@ -1155,7 +1209,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_fir_ex$surv_prop_2[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_fir_ex$surv_prop_3[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_fir_ex$surv_prop_4[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_scut_fir_ex$surv_prop_6[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1164,7 +1219,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_fir_ex$surv_prop_2[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_scut_fir_ex$surv_prop_3[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_scut_fir_ex$surv_prop_4[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"],
-        df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"]
+        df_list$mm_scut_fir_ex$surv_prop_5[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"],
+        df_list$mm_scut_fir_ex$surv_prop_6[df_list$mm_scut_fir_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -1234,7 +1290,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_fir_no$surv_prop_2[df_list$mm_sshr_fir_no$treatment == "seeded"]),
           length(df_list$mm_sshr_fir_no$surv_prop_3[df_list$mm_sshr_fir_no$treatment == "seeded"]),
           length(df_list$mm_sshr_fir_no$surv_prop_4[df_list$mm_sshr_fir_no$treatment == "seeded"]),
-          length(df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded"])
+          length(df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded"]),
+          length(df_list$mm_sshr_fir_no$surv_prop_6[df_list$mm_sshr_fir_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1243,7 +1300,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_fir_no$surv_prop_2[df_list$mm_sshr_fir_no$treatment == "seeded"],
         df_list$mm_sshr_fir_no$surv_prop_3[df_list$mm_sshr_fir_no$treatment == "seeded"],
         df_list$mm_sshr_fir_no$surv_prop_4[df_list$mm_sshr_fir_no$treatment == "seeded"],
-        df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded"]
+        df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded"],
+        df_list$mm_sshr_fir_no$surv_prop_6[df_list$mm_sshr_fir_no$treatment == "seeded"]
       )
     )
   df_list$mm_sshr_fir_ex_seed <-
@@ -1256,7 +1314,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_fir_ex$surv_prop_2[df_list$mm_sshr_fir_ex$treatment == "seeded"]),
           length(df_list$mm_sshr_fir_ex$surv_prop_3[df_list$mm_sshr_fir_ex$treatment == "seeded"]),
           length(df_list$mm_sshr_fir_ex$surv_prop_4[df_list$mm_sshr_fir_ex$treatment == "seeded"]),
-          length(df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded"])
+          length(df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded"]),
+          length(df_list$mm_sshr_fir_ex$surv_prop_6[df_list$mm_sshr_fir_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1265,7 +1324,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_fir_ex$surv_prop_2[df_list$mm_sshr_fir_ex$treatment == "seeded"],
         df_list$mm_sshr_fir_ex$surv_prop_3[df_list$mm_sshr_fir_ex$treatment == "seeded"],
         df_list$mm_sshr_fir_ex$surv_prop_4[df_list$mm_sshr_fir_ex$treatment == "seeded"],
-        df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded"]
+        df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded"],
+        df_list$mm_sshr_fir_ex$surv_prop_6[df_list$mm_sshr_fir_ex$treatment == "seeded"]
       )
     )
   df_list$mm_sshr_fir_no_seedscar <-
@@ -1278,7 +1338,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_fir_no$surv_prop_2[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_fir_no$surv_prop_3[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_fir_no$surv_prop_4[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"])
+          length(df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_sshr_fir_no$surv_prop_6[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1287,7 +1348,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_fir_no$surv_prop_2[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"],
         df_list$mm_sshr_fir_no$surv_prop_3[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"],
         df_list$mm_sshr_fir_no$surv_prop_4[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"],
-        df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"]
+        df_list$mm_sshr_fir_no$surv_prop_5[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"],
+        df_list$mm_sshr_fir_no$surv_prop_6[df_list$mm_sshr_fir_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_sshr_fir_ex_seedscar <-
@@ -1300,7 +1362,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_fir_ex$surv_prop_2[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_fir_ex$surv_prop_3[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_fir_ex$surv_prop_4[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_sshr_fir_ex$surv_prop_6[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1309,7 +1372,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_fir_ex$surv_prop_2[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_sshr_fir_ex$surv_prop_3[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"],
         df_list$mm_sshr_fir_ex$surv_prop_4[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"],
-        df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"]
+        df_list$mm_sshr_fir_ex$surv_prop_5[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"],
+        df_list$mm_sshr_fir_ex$surv_prop_6[df_list$mm_sshr_fir_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -1374,7 +1438,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_spruce_no$surv_prop_2[df_list$mm_scut_spruce_no$treatment == "seeded"]),
           length(df_list$mm_scut_spruce_no$surv_prop_3[df_list$mm_scut_spruce_no$treatment == "seeded"]),
           length(df_list$mm_scut_spruce_no$surv_prop_4[df_list$mm_scut_spruce_no$treatment == "seeded"]),
-          length(df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded"])
+          length(df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded"]),
+          length(df_list$mm_scut_spruce_no$surv_prop_6[df_list$mm_scut_spruce_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1383,7 +1448,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_spruce_no$surv_prop_2[df_list$mm_scut_spruce_no$treatment == "seeded"],
         df_list$mm_scut_spruce_no$surv_prop_3[df_list$mm_scut_spruce_no$treatment == "seeded"],
         df_list$mm_scut_spruce_no$surv_prop_4[df_list$mm_scut_spruce_no$treatment == "seeded"],
-        df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded"]
+        df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded"],
+        df_list$mm_scut_spruce_no$surv_prop_6[df_list$mm_scut_spruce_no$treatment == "seeded"]
       )
     )
   df_list$mm_scut_spruce_ex_seed <-
@@ -1396,7 +1462,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_spruce_ex$surv_prop_2[df_list$mm_scut_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_scut_spruce_ex$surv_prop_3[df_list$mm_scut_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_scut_spruce_ex$surv_prop_4[df_list$mm_scut_spruce_ex$treatment == "seeded"]),
-          length(df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded"])
+          length(df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded"]),
+          length(df_list$mm_scut_spruce_ex$surv_prop_6[df_list$mm_scut_spruce_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1405,7 +1472,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_spruce_ex$surv_prop_2[df_list$mm_scut_spruce_ex$treatment == "seeded"],
         df_list$mm_scut_spruce_ex$surv_prop_3[df_list$mm_scut_spruce_ex$treatment == "seeded"],
         df_list$mm_scut_spruce_ex$surv_prop_4[df_list$mm_scut_spruce_ex$treatment == "seeded"],
-        df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded"]
+        df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded"],
+        df_list$mm_scut_spruce_ex$surv_prop_6[df_list$mm_scut_spruce_ex$treatment == "seeded"]
       )
     )
   df_list$mm_scut_spruce_no_seedscar <-
@@ -1418,7 +1486,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_spruce_no$surv_prop_2[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_spruce_no$surv_prop_3[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_spruce_no$surv_prop_4[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"])
+          length(df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_scut_spruce_no$surv_prop_6[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1427,7 +1496,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_spruce_no$surv_prop_2[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_scut_spruce_no$surv_prop_3[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_scut_spruce_no$surv_prop_4[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"],
-        df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"]
+        df_list$mm_scut_spruce_no$surv_prop_5[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"],
+        df_list$mm_scut_spruce_no$surv_prop_6[df_list$mm_scut_spruce_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_scut_spruce_ex_seedscar <-
@@ -1440,7 +1510,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_scut_spruce_ex$surv_prop_2[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_spruce_ex$surv_prop_3[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_scut_spruce_ex$surv_prop_4[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_scut_spruce_ex$surv_prop_6[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1449,7 +1520,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_scut_spruce_ex$surv_prop_2[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_scut_spruce_ex$surv_prop_3[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_scut_spruce_ex$surv_prop_4[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"],
-        df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"]
+        df_list$mm_scut_spruce_ex$surv_prop_5[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"],
+        df_list$mm_scut_spruce_ex$surv_prop_6[df_list$mm_scut_spruce_ex$treatment == "seeded.scarified"]
       )
     )
   
@@ -1515,7 +1587,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_spruce_no$surv_prop_2[df_list$mm_sshr_spruce_no$treatment == "seeded"]),
           length(df_list$mm_sshr_spruce_no$surv_prop_3[df_list$mm_sshr_spruce_no$treatment == "seeded"]),
           length(df_list$mm_sshr_spruce_no$surv_prop_4[df_list$mm_sshr_spruce_no$treatment == "seeded"]),
-          length(df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded"])
+          length(df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded"]),
+          length(df_list$mm_sshr_spruce_no$surv_prop_6[df_list$mm_sshr_spruce_no$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1524,7 +1597,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_spruce_no$surv_prop_2[df_list$mm_sshr_spruce_no$treatment == "seeded"],
         df_list$mm_sshr_spruce_no$surv_prop_3[df_list$mm_sshr_spruce_no$treatment == "seeded"],
         df_list$mm_sshr_spruce_no$surv_prop_4[df_list$mm_sshr_spruce_no$treatment == "seeded"],
-        df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded"]
+        df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded"],
+        df_list$mm_sshr_spruce_no$surv_prop_6[df_list$mm_sshr_spruce_no$treatment == "seeded"]
       )
     )
   df_list$mm_sshr_spruce_ex_seed <-
@@ -1537,7 +1611,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_spruce_ex$surv_prop_2[df_list$mm_sshr_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_sshr_spruce_ex$surv_prop_3[df_list$mm_sshr_spruce_ex$treatment == "seeded"]),
           length(df_list$mm_sshr_spruce_ex$surv_prop_4[df_list$mm_sshr_spruce_ex$treatment == "seeded"]),
-          length(df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded"])
+          length(df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded"]),
+          length(df_list$mm_sshr_spruce_ex$surv_prop_6[df_list$mm_sshr_spruce_ex$treatment == "seeded"])
         )
       )),
       surv = c(
@@ -1546,7 +1621,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_spruce_ex$surv_prop_2[df_list$mm_sshr_spruce_ex$treatment == "seeded"],
         df_list$mm_sshr_spruce_ex$surv_prop_3[df_list$mm_sshr_spruce_ex$treatment == "seeded"],
         df_list$mm_sshr_spruce_ex$surv_prop_4[df_list$mm_sshr_spruce_ex$treatment == "seeded"],
-        df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded"]
+        df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded"],
+        df_list$mm_sshr_spruce_ex$surv_prop_6[df_list$mm_sshr_spruce_ex$treatment == "seeded"]
       )
     )
   df_list$mm_sshr_spruce_no_seedscar <-
@@ -1559,7 +1635,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_spruce_no$surv_prop_2[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_spruce_no$surv_prop_3[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_spruce_no$surv_prop_4[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"]),
-          length(df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"])
+          length(df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"]),
+          length(df_list$mm_sshr_spruce_no$surv_prop_6[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1568,7 +1645,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_spruce_no$surv_prop_2[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_sshr_spruce_no$surv_prop_3[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"],
         df_list$mm_sshr_spruce_no$surv_prop_4[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"],
-        df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"]
+        df_list$mm_sshr_spruce_no$surv_prop_5[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"],
+        df_list$mm_sshr_spruce_no$surv_prop_6[df_list$mm_sshr_spruce_no$treatment == "seeded.scarified"]
       )
     )
   df_list$mm_sshr_spruce_ex_seedscar <-
@@ -1581,7 +1659,8 @@ gtree_fun <- function(df, n_yr) {
           length(df_list$mm_sshr_spruce_ex$surv_prop_2[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_spruce_ex$surv_prop_3[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
           length(df_list$mm_sshr_spruce_ex$surv_prop_4[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
-          length(df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"])
+          length(df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"]),
+          length(df_list$mm_sshr_spruce_ex$surv_prop_6[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"])
         )
       )),
       surv = c(
@@ -1590,7 +1669,8 @@ gtree_fun <- function(df, n_yr) {
         df_list$mm_sshr_spruce_ex$surv_prop_2[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_sshr_spruce_ex$surv_prop_3[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"],
         df_list$mm_sshr_spruce_ex$surv_prop_4[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"],
-        df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"]
+        df_list$mm_sshr_spruce_ex$surv_prop_5[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"],
+        df_list$mm_sshr_spruce_ex$surv_prop_6[df_list$mm_sshr_spruce_ex$treatment == "seeded.scarified"]
       )
     )
   
