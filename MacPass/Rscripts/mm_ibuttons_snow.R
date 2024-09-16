@@ -65,6 +65,27 @@ sum_df <- df %>%
   #        depth_p = ifelse((month > 5 & month < 10) & is.na(depth_p), 0, depth_p),
   #        depth_f = ifelse((month > 5 & month < 10) & is.na(depth_f), 0, depth_f))
 
-sum_df %>% ggplot(aes(x = datetime, y = tsclean(depth_f), color = site)) + geom_point() + geom_line() +
-  geom_smooth(se = FALSE, span = 1) + ylim(0,120)
+sum_df %>% ggplot(aes(x = datetime, y = depth_f, color = site)) + geom_point() + geom_line() +
+  # geom_smooth(se = FALSE, span = 1) + 
+  ylim(0,120)
     
+sum_df %>% ggplot(aes(x = datetime, y = depth_p, color = site)) + geom_point() + geom_line() +
+  # geom_smooth(se = FALSE, span = 1)    
+ylim(0,120)
+
+## Generate the date range ----
+min_date <- min(sum_df$datetime)
+min_year <- year(min_date)
+min_month <- sprintf("%02d", month(min_date))
+min_day <- sprintf("%02d", day(min_date))
+max_date <- max(sum_df$datetime)
+max_year <- year(max_date)
+max_month <- sprintf("%02d", month(max_date))
+max_day <- sprintf("%02d", day(max_date))
+
+## Generate the file name and path and export ----
+save_path <- sprintf("./Earthwatch/MacPass/data/mm_trail_cam_ibuttons_%s%s%s_%s%s%s.csv",
+                     min_year, min_month, min_day,
+                     max_year, max_month, max_day)
+write.csv(sum_df, save_path, row.names=FALSE)
+

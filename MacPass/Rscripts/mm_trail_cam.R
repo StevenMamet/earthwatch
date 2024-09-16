@@ -8,6 +8,7 @@
 library(tidyverse)
 library(lubridate)
 library(zoo) # Interpolating snow data
+library(forecast)
 
 rm(list = ls())
 
@@ -15,15 +16,82 @@ setwd("~/Desktop/Workspace")
 
 #_____________________________________________----
 # Step 1: Read and prep the cam data ----
-mm_snow <- read.csv("./Earthwatch/MacPass/data/mm_trail_cam.csv")
-mm_snow <- mm_snow %>% 
+mm_snow_filled <- read_csv("./Earthwatch/MacPass/data/mm_trail_cam_20150818_20201017_filled.csv") %>% 
   mutate(date = ymd(date))
-mm_snow %>% 
+mm_snow_filled %>% 
   ggplot(aes(x = date, y = gf.top)) + geom_line(col = "dodgerblue2") + 
   geom_line(aes(y = gf.side), col = "blue")
+mm_snow_filled %>% 
+  ggplot(aes(x = date, y = hf.top)) + geom_line(col = "dodgerblue2") + 
+  geom_line(aes(y = hf.side), col = "blue")
+
+mm_snow <- read.csv("./Earthwatch/MacPass/data/mm_trail_cam.csv")
+mm_snow <- mm_snow %>% 
+  mutate(date = ymd(date)) %>% 
+  mutate(hf.top = as.numeric(hf.top),
+         hf.side = as.numeric(hf.side),
+         gf.top = as.numeric(gf.top),
+         gf.side = as.numeric(gf.side))
+mm_snow %>% 
+  ggplot(aes(x = date)) + 
+  geom_line(aes(y = gf.top), col = "dodgerblue2") + 
+  geom_line(aes(y = gf.side), col = "blue")
+
 mm_snow %>% 
   ggplot(aes(x = date, y = hf.top)) + geom_line(col = "dodgerblue2") + 
   geom_line(aes(y = hf.side), col = "blue")
+
+mm_snow <-
+  mm_snow %>%
+  full_join(mm_snow_filled %>% 
+              select(-c("id","year","month","day")) %>% 
+              rename(gf_top_mod = gf.top,
+                     gf_side_mod = gf.side,
+                     hf_top_mod = hf.top,
+                     hf_side_mod = hf.side), by = "date") %>% 
+    mutate(gf.top = ifelse(date < "2020-06-01" & is.na(gf.top), gf_top_mod, gf.top),
+           gf.side = ifelse(date < "2020-06-01" & is.na(gf.side), gf_side_mod, gf.side)) %>% 
+    mutate(gf.top = ifelse(date < "2020-06-01", tsclean(gf.top), gf.top),
+           gf.side = ifelse(date < "2020-06-01", tsclean(gf.side), gf.side)) %>% 
+    mutate(hf.top = ifelse(date < "2020-06-01" & is.na(hf.top), hf_top_mod, hf.top),
+           hf.side = ifelse(date < "2020-06-01" & is.na(hf.side), hf_side_mod, hf.side)) %>% 
+    mutate(hf.top = ifelse(date < "2020-06-01", tsclean(hf.top), hf.top),
+           hf.side = ifelse(date < "2020-06-01", tsclean(hf.side), hf.side))# %>% 
+    # ggplot(aes(x = date)) + 
+    # geom_line(aes(y = hf.top), col = "dodgerblue2") + 
+    # geom_line(aes(y = hf.side), col = "blue") +
+    # ylim(0,205)
+
+mm_snow %>% 
+  mutate(gf.top.ibuttons = ifelse((gf.top.ibuttons > 0), gf.top.ibuttons+20, gf.top.ibuttons)) %>% 
+  mutate(gf.side.ibuttons = ifelse((gf.side.ibuttons > 0), gf.side.ibuttons+20, gf.side.ibuttons)) %>% 
+  mutate(gf.top = ifelse(date > "2021-08-01" & is.na(gf.top), gf.top.ibuttons, gf.top)) %>% 
+  mutate(gf.side = ifelse(date > "2021-08-01" & is.na(gf.side), gf.side.ibuttons, gf.side)) %>% 
+  ggplot(aes(x = date, y = tsclean(gf.top))) + geom_line(col = "dodgerblue2") + 
+  geom_line(aes(y = tsclean(gf.side)), col = "blue") #+
+  # geom_line(aes(y = gf.top.ibuttons), col = "green1") +
+  # geom_line(aes(y = tsclean(gf.side.ibuttons)), col = "forestgreen")
+
+mm_snow %>% 
+  # mutate(hf.top.ibuttons = ifelse((hf.top.ibuttons > 0), hf.top.ibuttons+20, hf.top.ibuttons)) %>% 
+  # mutate(hf.side.ibuttons = ifelse((hf.side.ibuttons > 0), hf.side.ibuttons+20, hf.side.ibuttons)) %>% 
+  # mutate(hf.top = ifelse(date > "2021-08-01" & is.na(hf.top), hf.top.ibuttons, hf.top)) %>% 
+  # mutate(hf.side = ifelse(date > "2021-08-01" & is.na(hf.side), hf.side.ibuttons, hf.side)) %>% 
+  ggplot(aes(x = date, y = tsclean(hf.top))) + geom_line(col = "dodgerblue2") + 
+  geom_line(aes(y = tsclean(hf.side)), col = "blue") #+
+# geom_line(aes(y = hf.top.ibuttons), col = "green1") +
+# geom_line(aes(y = tsclean(hf.side.ibuttons)), col = "forestgreen")
+
+
+mm_snow %>% 
+  # mutate(hf.side = ifelse(hf.side > 155, NA, hf.side)) %>% 
+  # mutate(hf.side = ifelse(date < "2020-06-01", tsclean(hf.side), hf.side)) %>% 
+  ggplot(aes(x = date, y = hf.top)) + geom_line(col = "dodgerblue2") + 
+  geom_line(aes(y = hf.side), col = "blue")
+
+mm_snow <- mm_snow %>% 
+  mutate(hf.side = ifelse(hf.side > 155, NA, hf.side))# %>% 
+  # mutate(hf.side = ifelse(date < "2020-06-01", tsclean(hf.side), hf.side))
 
 # Step 2: Interpolate missing values for HF ----
 ## HF top ----
