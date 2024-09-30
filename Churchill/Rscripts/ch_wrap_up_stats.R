@@ -11,7 +11,7 @@ rm(list = ls())
 setwd("~/Desktop/Workspace/")
 
 # Constants ----
-year <- 2023
+year <- 2024
 
 # Functions ----
 poly_na <- function(df, color) {
@@ -264,7 +264,7 @@ par(mar = c(4,4,2,1))
 par(xpd = FALSE)
 
 # PPA
-plot(ppa$year, ppa$mean, type='n', xlim = c(2002,year), ylim = rev(c(35,110)), xaxt='n',yaxt = "n", ann=FALSE)# yaxs = "i", xaxs = "i", xlab = "", ylab = "")
+plot(ppa$year, ppa$mean, type='n', xlim = c(2002,year), ylim = rev(c(35,130)), xaxt='n',yaxt = "n", ann=FALSE)# yaxs = "i", xaxs = "i", xlab = "", ylab = "")
 poly_na(ppa, "olivedrab1")
 points(ppa[c(1,3,c(nrow(ppa):nrow(ppa)-1)),1], ppa[c(1,3,c(nrow(ppa):nrow(ppa)-1)),4], col = alpha("olivedrab1",0.6), pch = 15)
 lines(ppa$year, ppa$mean, type = "l", lwd=2, col = "olivedrab4")
@@ -296,8 +296,8 @@ legend("bottomleft", legend=bquote("BLK slope = " ~ .(-blk_slope) ~ "cm yr"^-1),
 # Axes
 axis(1, at = seq(2002,year,1), labels = NA)
 axis(1, at = seq(2002,year,2), labels = seq(2002,year,2))
-axis(2, at = rev(seq(40,110,10)), labels = NA)
-axis(2, at = rev(seq(40,100,20)), labels = rev(seq(40,100,20)), tick = FALSE)
+axis(2, at = rev(seq(40,130,10)), labels = NA)
+axis(2, at = rev(seq(40,120,20)), labels = rev(seq(40,120,20)), tick = FALSE)
 mtext(side = 1, "Year", line = 2.5)
 mtext(side = 2, "Thaw depth (cm)", line = 2.5)
 
@@ -486,25 +486,65 @@ z11b <- factor(ch.rid.bspruce.no3[ch.rid.bspruce.no3$sow.year==2018,"treat"], le
 z12a <- factor(ch.wsu.bspruce.ex3[ch.wsu.bspruce.ex3$sow.year==2018,"treat"], levels = c("2","4"))
 z12b <- factor(ch.wsu.bspruce.no3[ch.wsu.bspruce.no3$sow.year==2018,"treat"], levels = c("2","4"))
 
+
+#__________
+
+ch_wsu_larch_ex1 <- subset(ch.wsu, species == "ll" & exclosure == "yes" & sow.year >= 2016)
+ch_wsu_larch_no1 <- subset(ch.wsu, species == "ll" & exclosure == "no" & sow.year >= 2016)
+ch_tun_larch_ex1 <- subset(ch.tun, species == "ll" & exclosure == "yes" & sow.year >= 2016)
+ch_tun_larch_no1 <- subset(ch.tun, species == "ll" & exclosure == "no" & sow.year >= 2016)
+ch_tis_larch_ex1 <- subset(ch.tis, species == "ll" & exclosure == "yes" & sow.year >= 2016)
+ch_tis_larch_no1 <- subset(ch.tis, species == "ll" & exclosure == "no" & sow.year >= 2016)
+ch_rid_larch_ex1 <- subset(ch.rid, species == "ll" & exclosure == "yes" & sow.year >= 2016)
+ch_rid_larch_no1 <- subset(ch.rid, species == "ll" & exclosure == "no" & sow.year >= 2016)
+
+ch_wsu_wspruce_ex1 <- subset(ch.wsu, species == "ws" & exclosure == "yes" & sow.year >= 2016)
+ch_wsu_wspruce_no1 <- subset(ch.wsu, species == "ws" & exclosure == "no" & sow.year >= 2016)
+ch_tun_wspruce_ex1 <- subset(ch.tun, species == "ws" & exclosure == "yes" & sow.year >= 2016)
+ch_tun_wspruce_no1 <- subset(ch.tun, species == "ws" & exclosure == "no" & sow.year >= 2016)
+ch_tis_wspruce_ex1 <- subset(ch.tis, species == "ws" & exclosure == "yes" & sow.year >= 2016)
+ch_tis_wspruce_no1 <- subset(ch.tis, species == "ws" & exclosure == "no" & sow.year >= 2016)
+ch_rid_wspruce_ex1 <- subset(ch.rid, species == "ws" & exclosure == "yes" & sow.year >= 2016)
+ch_rid_wspruce_no1 <- subset(ch.rid, species == "ws" & exclosure == "no" & sow.year >= 2016)
+
+ch_wsu_bspruce_ex1 <- subset(ch.wsu, species == "bs" & exclosure == "yes" & sow.year >= 2016)
+ch_wsu_bspruce_no1 <- subset(ch.wsu, species == "bs" & exclosure == "no" & sow.year >= 2016)
+ch_tun_bspruce_ex1 <- subset(ch.tun, species == "bs" & exclosure == "yes" & sow.year >= 2016)
+ch_tun_bspruce_no1 <- subset(ch.tun, species == "bs" & exclosure == "no" & sow.year >= 2016)
+ch_tis_bspruce_ex1 <- subset(ch.tis, species == "bs" & exclosure == "yes" & sow.year >= 2016)
+ch_tis_bspruce_no1 <- subset(ch.tis, species == "bs" & exclosure == "no" & sow.year >= 2016)
+ch_rid_bspruce_ex1 <- subset(ch.rid, species == "bs" & exclosure == "yes" & sow.year >= 2016)
+ch_rid_bspruce_no1 <- subset(ch.rid, species == "bs" & exclosure == "no" & sow.year >= 2016)
+
+full_x1a <- factor(ch_tun_larch_ex1[ch_tun_larch_ex1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x1b <- factor(ch_tun_larch_no1[ch_tun_larch_no1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x2a <- factor(ch_tis_larch_ex1[ch_tis_larch_ex1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x2b <- factor(ch_tis_larch_no1[ch_tis_larch_no1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x3a <- factor(ch_rid_larch_ex1[ch_rid_larch_ex1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x3b <- factor(ch_rid_larch_no1[ch_rid_larch_no1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x4a <- factor(ch_wsu_larch_ex1[ch_wsu_larch_ex1$sow.year >= 2016,"treat"], levels = c("2","4"))
+full_x4b <- factor(ch_wsu_larch_no1[ch_wsu_larch_no1$sow.year >= 2016,"treat"], levels = c("2","4"))
+
 ##**************************
 # Set up some plotting constants
 x_lim = c(0.4,4.5)
 y_lim = c(0,1.1)
 
+#_______________________----
 # Proportion white spruce germination cage/uncaged ----
-jpeg("~/Desktop/Workspace/Earthwatch/Churchill/figures/wspruce.germination.jpg", width = 5, height = 7, units = "in", res = 300)
+jpeg(sprintf("~/Desktop/Workspace/Earthwatch/Churchill/figures/wspruce_germination_%s.jpg", year), width = 5, height = 7, units = "in", res = 300)
 par(mfrow = c(4, 1))
 par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
 par(mar = c(0.5, 2, 1, 1), oma = c(2,1,0,0))
 
 ## TUN - White spruce out of exclosures
-boxplot(ch.tun.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+boxplot(ch_tun_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.tun.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_tun_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## TUN - White spruce in exclosures
-boxplot(ch.tun.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.tun.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(ch_tun_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_tun_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(a) TUN", bty = "n", inset = c(0,0))
@@ -513,37 +553,37 @@ legend("topright", c("Uncaged","Caged"), pt.bg = c("red", "blue"), col = "black"
        y.intersp = 0.7, inset = c(0.1,0.01), horiz = F)
 
 ## TIS - White spruce out of exclosures
-boxplot(ch.tis.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+boxplot(ch_tis_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.tis.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_tis_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## TIS - White spruce in exclosures
-boxplot(ch.tis.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.tis.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(ch_tis_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_tis_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(b) TIS", bty = "n", inset = c(0,0))
 
 ## RID - White spruce out of exclosures
-boxplot(ch.rid.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+boxplot(ch_rid_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.rid.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_rid_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## RID - White spruce in exclosures
-boxplot(ch.rid.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.rid.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(ch_rid_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_rid_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(c) RID", bty = "n", inset = c(0,0))
 
 ## WSU - White spruce out of exclosures
-boxplot(ch.wsu.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+boxplot(ch_wsu_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.wsu.wspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_wsu_wspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## WSU - White spruce in exclosures
-boxplot(ch.wsu.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.wsu.wspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(ch_wsu_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_wsu_wspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 legend("topleft", "(d) WSU", bty = "n", inset = c(0,0))
 
@@ -552,20 +592,21 @@ axis(1, at = c(1.5,3.5), labels = c("Vegetated","Scarified"), tick = TRUE)
 mtext(side = 2, "Germination proportion of viable", outer = TRUE)
 dev.off()
 
-# Proportion white spruce germination cage/uncaged ----
-jpeg("~/Desktop/Workspace/Earthwatch/Churchill/figures/wspruce.germination.jpg", width = 5, height = 7, units = "in", res = 300)
-par(mfrow = c(4, 1))
+#_______________________----
+# Proportion black spruce germination cage/uncaged ----
+jpeg(sprintf("~/Desktop/Workspace/Earthwatch/Churchill/figures/bspruce_germination_%s.jpg", year), width = 5, height = 7, units = "in", res = 300)
+par(mfrow = c(3, 1))
 par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
 par(mar = c(0.5, 2, 1, 1), oma = c(2,1,0,0))
 
 ## TUN - Black spruce out of exclosures
-boxplot(ch.tun.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+boxplot(ch_tun_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.tun.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_tun_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 ## TUN - Black spruce in exclosures
-boxplot(ch.tun.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.tun.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+boxplot(ch_tun_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_tun_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(a) TUN", bty = "n", inset = c(0,0))
@@ -573,38 +614,100 @@ legend("topright", c("Uncaged","Caged"), pt.bg = c("red", "blue"), col = "black"
        bty = "n", pch = 22, pt.cex = c(1,1), text.width = 1, 
        y.intersp = 0.7, inset = c(0.1,0.01), horiz = F)
 
-## TIS - Black spruce out of exclosures
-boxplot(ch.tis.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+# ## TIS - Black spruce out of exclosures
+# boxplot(ch_tis_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+#         xaxt = "n", yaxt = "n", col = "red")
+# stripchart(ch_tis_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+#            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+# ## TIS - Black spruce in exclosures
+# boxplot(ch_tis_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+# stripchart(ch_tis_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+#            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+# axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
+# legend("topleft", "(b) TIS", bty = "n", inset = c(0,0))
+
+## RID - Black spruce out of exclosures
+boxplot(ch_rid_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.tis.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_rid_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
-## TIS - Black spruce in exclosures
-boxplot(ch.tis.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.tis.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+## RID - Black spruce in exclosures
+boxplot(ch_rid_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_rid_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+           add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
+legend("topleft", "(b) RID", bty = "n", inset = c(0,0))
+
+## WSU - Black spruce out of exclosures
+boxplot(ch_wsu_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+        xaxt = "n", yaxt = "n", col = "red")
+stripchart(ch_wsu_bspruce_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+           add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+## WSU - Black spruce in exclosures
+boxplot(ch_wsu_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_wsu_bspruce_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+           add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+legend("topleft", "(c) WSU", bty = "n", inset = c(0,0))
+
+axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
+axis(1, at = c(1.5,3.5), labels = c("Vegetated","Scarified"), tick = TRUE)
+mtext(side = 2, "Germination proportion of viable", outer = TRUE)
+dev.off()
+
+#_______________________----
+# Proportion larch germination cage/uncaged ----
+jpeg(sprintf("~/Desktop/Workspace/Earthwatch/Churchill/figures/larch_germination_%s.jpg", year), width = 5, height = 7, units = "in", res = 300)
+par(mfrow = c(4, 1))
+par(ps = 10, cex = 1, cex.axis = 1) # Sets the font size to 10 pts
+par(mar = c(0.5, 2, 1, 1), oma = c(2,1,0,0))
+
+## TUN - Larch out of exclosures
+boxplot(ch_tun_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+        xaxt = "n", yaxt = "n", col = "red")
+stripchart(ch_tun_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+           add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+## TUN - Larch in exclosures
+boxplot(ch_tun_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_tun_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+           add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
+legend("topleft", "(a) TUN", bty = "n", inset = c(0,0))
+legend("topright", c("Uncaged","Caged"), pt.bg = c("red", "blue"), col = "black",
+       bty = "n", pch = 22, pt.cex = c(1,1), text.width = 1, 
+       y.intersp = 0.7, inset = c(0.1,0.01), horiz = F)
+
+## TIS - Larch out of exclosures
+boxplot(ch_tis_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+        xaxt = "n", yaxt = "n", col = "red")
+stripchart(ch_tis_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+           add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
+## TIS - Larch in exclosures
+boxplot(ch_tis_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_tis_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(b) TIS", bty = "n", inset = c(0,0))
 
-## RID - Black spruce out of exclosures
-boxplot(ch.rid.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+## RID - Larch out of exclosures
+boxplot(ch_rid_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.rid.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_rid_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
-## RID - Black spruce in exclosures
-boxplot(ch.rid.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.rid.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+## RID - Larch in exclosures
+boxplot(ch_rid_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_rid_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 legend("topleft", "(c) RID", bty = "n", inset = c(0,0))
 
-## WSU - Black spruce out of exclosures
-boxplot(ch.wsu.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
+## WSU - Larch out of exclosures
+boxplot(ch_wsu_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), xlim = x_lim, ylim = y_lim, 
         xaxt = "n", yaxt = "n", col = "red")
-stripchart(ch.wsu.bspruce.no1$germ.prop.via ~ x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
+stripchart(ch_wsu_larch_no1$germ.prop.via ~ full_x1b, at = c(1,3), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
-## WSU - Black spruce in exclosures
-boxplot(ch.wsu.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
-stripchart(ch.wsu.bspruce.ex1$germ.prop.via ~ x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
+## WSU - Larch in exclosures
+boxplot(ch_wsu_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), xaxt = "n", add = TRUE, col = "blue")
+stripchart(ch_wsu_larch_ex1$germ.prop.via ~ full_x1a, at = c(2,4), vertical = TRUE, method = "jitter", 
            add = TRUE, bg = "gray50", pch = 21, cex = 0.75)
 legend("topleft", "(d) WSU", bty = "n", inset = c(0,0))
 
@@ -612,8 +715,6 @@ axis(1, at = c(1.5,3.5), labels = NA, tick = TRUE)
 axis(1, at = c(1.5,3.5), labels = c("Vegetated","Scarified"), tick = TRUE)
 mtext(side = 2, "Germination proportion of viable", outer = TRUE)
 dev.off()
-
-
 
 
 
