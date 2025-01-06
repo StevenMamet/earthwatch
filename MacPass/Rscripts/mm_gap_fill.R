@@ -75,9 +75,9 @@ p1 / p2 / p3 / p4 / p5
 # If recent data are needed, download here.
 # Otherwise, read in the existing data below
 
-# Get the correct station ID, make a df using that ID and the time period of interest, and download
+# # Get the correct station ID, make a df using that ID and the time period of interest, and download
 # temp_df <- tibble(
-#   Date = as_date(c(min(macpass$Date), "2024-08-12"))
+#   Date = as_date(c(min(macpass$Date), "2024-08-24"))
 # )
 # weather_df <- weather_download(temp_df, weather_station, time_zone, time_unit, location)
 

@@ -16,8 +16,13 @@ rm(list=ls())
 
 #_____________________________________-----
 # Constants ----
-curr_year <- 2023
+curr_year <- 2024
 visual_output <- "~/Desktop/Workspace/earthwatch/MacPass/figures"
+data_output <- "./Earthwatch/MacPass/"
+location <- "MacPass"
+p <- c("MacPass_EnvCan_19980628")
+time_zone <- "Canada/Yukon"
+filter_date <- "2023-08-19"
 
 #_____________________________________-----
 # Source R functions ----
@@ -31,7 +36,7 @@ names(macpass) <- gsub("\\.t","", names(macpass)) # rm any ".t" in column names
 
 #_____________________________________-----
 # Wrangle EnvCan data if already downloaded ----
-weather_df <- read_csv("/Users/sdmamet/Desktop/Workspace/Earthwatch/MacPass/data/MacPass_EnvCan_19980628_20230818.csv")[-1]
+weather_df <- read_most_recent_weather(data_output, p)
 weather_df %>% 
   ggplot(aes(x = as_datetime(datetime), y = station_temp)) + geom_line()
 
@@ -66,7 +71,7 @@ macpass %>%
   ggplot(aes(x = as_datetime(date), y = mean.150)) + geom_line()
 
 result_df <- macpass %>%
-  filter(date > "2022-08-18") %>% 
+  filter(date > filter_date) %>% 
   select(5:ncol(macpass)) %>%  # Adjust this to select columns from the 5th to the last
   summarise(across(everything(), list(total = ~n(), na_count = ~sum(is.na(.))))) %>% 
   t() %>% 
