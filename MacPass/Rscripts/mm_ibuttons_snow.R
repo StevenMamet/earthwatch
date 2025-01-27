@@ -23,7 +23,6 @@ setwd("~/Desktop/Workspace")
 # Read in iButton data ----
 df <- read.csv("/Users/sdmamet/Desktop/Workspace/earthwatch/MacPass/data/ibuttons_macpass.csv")
 
-
 sum_df <- df %>%
   mutate(datetime = as_date(paste(year, month, day, sep = "-"))) %>%
   group_by(site, datetime) %>%
