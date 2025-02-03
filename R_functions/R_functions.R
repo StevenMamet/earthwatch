@@ -42,8 +42,8 @@ weather_download <- function(df, weather_station, time_zone, time_unit, location
   pb$tick() # Update the progress bar
   
   # Step 3: Download weather data
-  start_date <- min(df$Date)
-  end_date <- max(df$Date)
+  start_date <- min(df$date)
+  end_date <- max(df$date)
   w_df <- weather_dl(station_ids = station_id, start = start_date, end = end_date)
   pb$tick() # Update the progress bar
   
@@ -117,7 +117,7 @@ read_most_recent_weather <- function(data_output, p) {
 # Join weather data frame with station data
 weather_join <- function(weather_df, df) {
   weather_daily <- weather_df %>%
-    select(-1) %>%
+    # select(-1) %>%
     mutate(
       datetime = as_datetime(datetime),
       year = year(datetime),
@@ -127,21 +127,21 @@ weather_join <- function(weather_df, df) {
     group_by(year, month, day) %>%
     summarise(across(everything(), ~ mean(., na.rm = T))) %>%
     ungroup() %>%
-    mutate(Date = ymd(paste(year, month, day, sep = "-")))
+    mutate(date = ymd(paste(year, month, day, sep = "-")))
   
   df <- df %>%
     standardize_year_column() %>%
-    left_join(weather_daily, by = "Date") %>%
-    select(-c(
-      month.x,
-      day,
-      datetime,
-      dew_point,
-      year,
-      rel_humid,
-      precip,
-      pressure
-    )) %>%
+    left_join(weather_daily, by = "date") %>%
+    select(-any_of(c(
+      "month.x",
+      "day",
+      "datetime",
+      "dew_point",
+      "year",
+      "rel_humid",
+      "precip",
+      "pressure"
+    ))) %>%
     rename(month = month.y) %>%
     relocate(month, .after = YEAR) %>%
     rowwise() %>%
@@ -259,17 +259,55 @@ move_pics <- function(input_path, time_unit) {
 #__________________________________________----
 # Fill missing values ----
 fill_missing_with_lm <- function(dat, vars, fill_var) {
-  for(i in seq_along(vars)) {
-    mod <- as.formula(paste0(vars[i], " ~ ", fill_var))
-    mod <- lm(mod, dat)
+  if (!fill_var %in% colnames(dat)) {
+    warning(paste("Skipping: Missing column", fill_var))
+    return(dat)  # Return unchanged tibble if fill_var is missing
+  }
+  
+  for (i in seq_along(vars)) {
+    if (!vars[i] %in% colnames(dat)) next  # Skip if variable is missing
+    
+    # Ensure both variables are numeric
+    dat[[vars[i]]] <- as.numeric(dat[[vars[i]]])
+    dat[[fill_var]] <- as.numeric(dat[[fill_var]])
+    
+    # Fit the model using all available variables
+    model_formula <- as.formula(paste(vars[i], "~", fill_var))
+    mod <- lm(model_formula, data = dat)
+    
+    # Find missing values
     misses <- which(is.na(dat[[vars[i]]]))
-    for(j in misses) {
-      newdat <- setNames(data.frame(dat[[fill_var]][j]), fill_var)
-      dat[[vars[i]]][j] <- predict(mod, newdat)
+    if (length(misses) > 0) {
+      newdat <- dat[misses, , drop = FALSE]  # Keep all columns in newdata
+      
+      # Ensure newdata only includes the variables used in the model
+      newdat <- newdat[, fill_var, drop = FALSE]
+      
+      # Debugging: Check structure before prediction
+      print(paste("Predicting", length(misses), "missing values for", vars[i], "using", fill_var))
+      print(str(newdat))
+      
+      # Apply the prediction
+      dat[[vars[i]]][misses] <- predict(mod, newdata = newdat)
     }
   }
   return(dat)
 }
+
+
+
+# fill_missing_with_lm <- function(dat, vars, fill_var) {
+#   for(i in seq_along(vars)) {
+#     mod <- as.formula(paste0(vars[i], " ~ ", fill_var))
+#     mod <- lm(mod, dat)
+#     misses <- which(is.na(dat[[vars[i]]]))
+#     for(j in misses) {
+#       newdat <- setNames(data.frame(dat[[fill_var]][j]), fill_var)
+#       dat[[vars[i]]][j] <- predict(mod, newdat)
+#     }
+#   }
+#   return(dat)
+# }
 
 #__________________________________________----
 # Calculate monthly R2 for gap-filling ----
